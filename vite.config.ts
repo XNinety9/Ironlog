@@ -42,8 +42,12 @@ function serviceWorker(): Plugin {
   }
 }
 
+const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as { version: string }
+
 // https://vite.dev/config/
 export default defineConfig({
+  // Version affichée dans l'app : celle de package.json, la même que le tag de release.
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   // Chemins relatifs : l'app fonctionne quel que soit le sous-dossier où elle est hébergée.
   base: './',
   plugins: [svelte(), serviceWorker()],

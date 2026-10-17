@@ -1,0 +1,13 @@
+# Lancer l'app en local : docker compose up --build, puis http://localhost:8080
+# Le service worker (hors ligne, installation) exige HTTPS, sauf sur localhost.
+services:
+  ironlog:
+    build: .
+    image: ironlog:local
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL

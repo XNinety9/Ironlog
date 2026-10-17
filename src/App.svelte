@@ -63,6 +63,8 @@
     </div>
     <BackupSection />
   {/if}
+
+  <footer class="foot">Ironlog {__APP_VERSION__}</footer>
 </div>
 
 <style>
@@ -83,6 +85,7 @@
     display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
     padding: 10px 14px; border: 1px solid var(--accent); border-radius: 10px; font-size: 14px;
   }
+  .foot { font-family: var(--f-mono); font-size: 11px; color: var(--muted); text-align: center; padding-top: 8px; }
   .warn { margin: 0; padding: 10px 14px; border: 1px solid var(--danger); color: var(--danger); border-radius: 10px; font-size: 14px; }
   .onboard {
     display: flex; gap: 12px 16px; align-items: center; justify-content: space-between; flex-wrap: wrap;

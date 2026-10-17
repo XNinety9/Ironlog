@@ -1,0 +1,172 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+    tags: ['v*.*.*']
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  check:
+    name: Types, build, archive
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installation
+        run: npm ci
+
+      - name: Types
+        run: npm run check
+
+      - name: Build
+        run: npm run build
+
+      - name: La version du tag correspond à package.json
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "Le tag v$tag ne correspond pas à package.json ($pkg)." >&2
+            exit 1
+          fi
+
+      - name: Archive du build
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          mkdir -p release
+          tar -czf "release/ironlog-${GITHUB_REF_NAME#v}.tar.gz" -C dist .
+          (cd release && sha256sum ./*.tar.gz > SHA256SUMS)
+
+      - uses: actions/upload-artifact@v4
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: release-assets
+          path: release/
+          if-no-files-found: error
+
+  docker:
+    name: Image Docker
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Nom de l'image (GHCR exige des minuscules)
+        id: image
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Connexion à GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Étiquettes
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image.outputs.name }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+
+      - name: Build local (pour le scan)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: ironlog:scan
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Scan de sécurité (Trivy)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ironlog:scan
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'
+
+      - name: Publication
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+
+  release:
+    name: Release GitHub
+    needs: [check, docker]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+          path: release
+
+      - name: Notes de version (section du CHANGELOG)
+        env:
+          VERSION: ${{ github.ref_name }}
+          IMAGE: ghcr.io/${{ github.repository }}
+        run: |
+          v="${VERSION#v}"
+          awk -v v="$v" '
+            /^## \[/ { if (on) exit; on = index($0, "[" v "]") > 0; next }
+            on
+          ' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then
+            echo "Pas de section [$v] dans CHANGELOG.md." >&2
+            exit 1
+          fi
+          {
+            echo
+            echo "## Installation"
+            echo
+            echo '```sh'
+            echo "docker pull ${IMAGE,,}:$v"
+            echo '```'
+            echo
+            echo "L'archive \`ironlog-$v.tar.gz\` contient le site statique, à servir en HTTPS."
+          } >> notes.md
+
+      - name: Publication de la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" release/* \
+            --title "Ironlog $GITHUB_REF_NAME" \
+            --notes-file notes.md \
+            --verify-tag
