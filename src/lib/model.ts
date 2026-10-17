@@ -34,6 +34,8 @@ export interface Measure {
   /** Position du point dans le repère de la figure de face (geo.json). */
   x: number
   y: number
+  /** Hauteur voulue du centre de l'étiquette, dans le même repère. Absente : alignée sur le point. */
+  labelY?: number
   /** Entrées triées par date croissante. */
   log: MeasureEntry[]
   createdAt: string

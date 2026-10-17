@@ -115,6 +115,23 @@ class Store {
     return m
   }
 
+  moveMeasure(id: string, x: number, y: number): void {
+    const m = this.measure(id)
+    if (!m) return
+    m.x = x
+    m.y = y
+    void this.put('measures', m)
+  }
+
+  /** Fixe la hauteur de l'étiquette, ou la remet en placement automatique (undefined). */
+  moveLabel(id: string, labelY: number | undefined): void {
+    const m = this.measure(id)
+    if (!m) return
+    if (labelY === undefined) delete m.labelY
+    else m.labelY = labelY
+    void this.put('measures', m)
+  }
+
   logMeasure(id: string, value: number, date: IsoDate = today()): void {
     const m = this.measure(id)
     if (!m) return

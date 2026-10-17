@@ -2,6 +2,13 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Chaque section `## [X.Y.Z]` alimente les notes de la release correspondante.
 
+## [Unreleased]
+
+### Mensurations
+- Les points se déplacent par glisser-déposer, en restant sur la silhouette.
+- Les étiquettes se déplacent à la verticale ; leur position est mémorisée et un lien les replace automatiquement.
+- Au clavier : les flèches déplacent le point ou l'étiquette qui a le focus.
+
 ## [1.0.0] - 2026-10-17
 
 Première version utilisable au quotidien.

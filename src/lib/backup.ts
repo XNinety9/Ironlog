@@ -47,7 +47,15 @@ function measure(v: unknown, i: number): Measure {
     return { id: l.id, date: l.date, value: l.value }
   })
   log.sort((a, b) => a.date.localeCompare(b.date))
-  return { id: v.id, name: v.name, x: v.x, y: v.y, log, createdAt: isStr(v.createdAt) ? v.createdAt : new Date().toISOString() }
+  return {
+    id: v.id,
+    name: v.name,
+    x: v.x,
+    y: v.y,
+    ...(isNum(v.labelY) ? { labelY: v.labelY } : {}),
+    log,
+    createdAt: isStr(v.createdAt) ? v.createdAt : new Date().toISOString(),
+  }
 }
 
 /** Lit un fichier de sauvegarde. Lève une erreur au message lisible si le fichier n'en est pas un. */

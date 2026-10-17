@@ -114,6 +114,9 @@
       </div>
     {/if}
 
+    {#if m.labelY !== undefined}
+      <button class="linkish" onclick={() => store.moveLabel(m.id, undefined)}>Replacer l'étiquette automatiquement</button>
+    {/if}
     <button class="linkish" onclick={() => onselect(null)}>Toutes les mesures</button>
     {#if confirmDel}
       <div class="btns">
