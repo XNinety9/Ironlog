@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { pwa, requestPersistence } from './lib/pwa.svelte'
   import { store } from './lib/store.svelte'
+  import BackupSection from './views/BackupSection.svelte'
   import Charges from './views/Charges.svelte'
   import Mensurations from './views/Mensurations.svelte'
 
@@ -16,6 +18,8 @@
 
   onMount(() => {
     void store.load()
+    void pwa.register()
+    void requestPersistence()
     const onHash = () => (tab = fromHash())
     addEventListener('hashchange', onHash)
     return () => removeEventListener('hashchange', onHash)
@@ -30,6 +34,13 @@
       <button role="tab" id="tab-mensurations" aria-selected={tab === 'mensurations'} aria-controls="v-mensurations" onclick={() => go('mensurations')}>Mensurations</button>
     </div>
   </header>
+
+  {#if pwa.updateReady}
+    <div class="update" role="status">
+      <span>Une nouvelle version d'Ironlog est prête.</span>
+      <button class="btn" onclick={() => pwa.applyUpdate()}>Recharger</button>
+    </div>
+  {/if}
 
   {#if store.status === 'memory'}
     <p class="warn" role="status">
@@ -50,6 +61,7 @@
     <div id="v-mensurations" role="tabpanel" aria-labelledby="tab-mensurations" hidden={tab !== 'mensurations'}>
       <Mensurations />
     </div>
+    <BackupSection />
   {/if}
 </div>
 
@@ -67,6 +79,10 @@
   }
   .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .mark { font-family: var(--f-display); font-weight: 800; font-size: 32px; letter-spacing: 0.05em; line-height: 1; }
+  .update {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    padding: 10px 14px; border: 1px solid var(--accent); border-radius: 10px; font-size: 14px;
+  }
   .warn { margin: 0; padding: 10px 14px; border: 1px solid var(--danger); color: var(--danger); border-radius: 10px; font-size: 14px; }
   .onboard {
     display: flex; gap: 12px 16px; align-items: center; justify-content: space-between; flex-wrap: wrap;

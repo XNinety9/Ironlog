@@ -1,11 +1,11 @@
 # Ironlog
 
-Suivi de charges et de mensurations à partir d'un schéma du corps cliquable. Application web (PWA à venir) pensée pour le téléphone à la salle comme pour l'ordi.
+Suivi de charges et de mensurations à partir d'un schéma du corps cliquable. Application web installable (PWA), utilisable hors ligne, pensée pour le téléphone à la salle comme pour l'ordi.
 
 - **Charges** : corps de face et de dos, en mode simple (groupes musculaires) ou détaillé (muscles). Chaque exercice est rattaché à des muscles principaux et secondaires ; chaque saisie (charge × répétitions) est datée.
 - **Mensurations** : des points placés librement sur le corps, chacun avec son historique.
 
-Les données restent dans le navigateur (IndexedDB).
+Les données restent dans le navigateur (IndexedDB). La section **Sauvegarde**, en bas de page, exporte et réimporte un fichier JSON.
 
 ## Développement
 
@@ -15,6 +15,12 @@ npm run dev      # http://localhost:5173, aussi accessible depuis le téléphone
 npm run check    # vérification des types
 npm run build
 ```
+
+## PWA
+
+Le build génère `sw.js` (plugin dans `vite.config.ts`, source dans `sw/sw.js`) : tous les fichiers du build sont mis en cache à l'installation, l'app démarre ensuite sans réseau. Quand une nouvelle version est déployée, un bandeau propose de recharger.
+
+Le service worker n'est actif qu'en production (`npm run build` puis `npm run preview`) et exige HTTPS, sauf sur `localhost`. Pour installer l'app sur un téléphone, il faut donc la servir en HTTPS.
 
 ## Schéma du corps
 

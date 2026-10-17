@@ -134,6 +134,39 @@ class Store {
     void this.del('measures', id)
   }
 
+  // ----- Sauvegarde -----
+
+  /** Remplace toutes les données (import d'une sauvegarde). */
+  async replaceAll(input: { exercises: Exercise[]; measures: Measure[] }): Promise<void> {
+    // Copie simple : IndexedDB ne sait pas cloner les proxys de Svelte.
+    const { exercises, measures } = $state.snapshot(input) as { exercises: Exercise[]; measures: Measure[] }
+    if (this.status === 'ready') {
+      const tx = (await db()).transaction(['exercises', 'measures'], 'readwrite')
+      try {
+        // Une seule transaction : en cas d'échec, l'annulation restaure les anciennes données.
+        const ex = tx.objectStore('exercises')
+        const ms = tx.objectStore('measures')
+        const ops: Promise<unknown>[] = [ex.clear(), ms.clear()]
+        for (const e of exercises) ops.push(ex.put(e))
+        for (const m of measures) ops.push(ms.put(m))
+        ops.push(tx.done)
+        // Après une annulation, toutes les requêtes rejettent : seule la première erreur compte.
+        for (const op of ops) op.catch(() => {})
+        await Promise.all(ops)
+      } catch (err) {
+        console.error('Échec de l’import', err)
+        try {
+          tx.abort()
+        } catch {
+          // Déjà annulée par l'erreur.
+        }
+        throw new Error('L’enregistrement des données importées a échoué. Tes données actuelles n’ont pas été modifiées.')
+      }
+    }
+    this.exercises = exercises.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    this.measures = measures.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+  }
+
   // ----- Exemples -----
 
   get isEmpty(): boolean {
