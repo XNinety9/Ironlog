@@ -1,0 +1,555 @@
+<title>Ironlog</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout : schéma du corps à gauche (le centre de gravité), panneau de détail à droite ; empilés sur téléphone. */
+:root {
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --ink: #151b22;
+  --muted: #5d6875;
+  --line: #d5dbe2;
+  --body: #f7f8fa;
+  --muscle: #eef1f5;
+  --lineart: #2b3440;
+  --m-s: #dde6f8;
+  --m-p: #b4c8f3;
+  --hover: #6a8be6;
+  --accent: #1f4fd1;
+  --accent-ink: #ffffff;
+  --good: #17845a;
+  --danger: #c0352b;
+  --f-display: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f141a; --surface: #18202a; --ink: #e7ecf2; --muted: #93a0af; --line: #2a3542;
+    --body: #1b232d; --muscle: #212a35; --lineart: #a9b5c3; --m-s: #253247; --m-p: #2f4673; --hover: #5577c8;
+    --accent: #6b95ff; --accent-ink: #0b1020; --good: #4cc38a; --danger: #ff7a6e;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f141a; --surface: #18202a; --ink: #e7ecf2; --muted: #93a0af; --line: #2a3542;
+  --body: #1b232d; --muscle: #212a35; --lineart: #a9b5c3; --m-s: #253247; --m-p: #2f4673; --hover: #5577c8;
+  --accent: #6b95ff; --accent-ink: #0b1020; --good: #4cc38a; --danger: #ff7a6e;
+  color-scheme: dark;
+}
+
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.45; }
+.app {
+  max-width: 1180px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 48px;
+  display: flex; flex-direction: column; gap: 18px;
+}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.mark { font-family: var(--f-display); font-weight: 800; font-size: 32px; letter-spacing: .05em; line-height: 1; }
+.tag { font-family: var(--f-mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+
+.tabs, .seg { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 2px; }
+.tabs button, .seg button {
+  font: inherit; border: 0; background: none; cursor: pointer; padding: 7px 14px; border-radius: 7px;
+  font-weight: 600; font-size: 14px; color: var(--muted);
+}
+.tabs button[aria-selected="true"], .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+
+.view { display: grid; grid-template-columns: minmax(0, 1fr) 350px; gap: 22px; align-items: start; }
+@media (max-width: 820px) { .view { grid-template-columns: minmax(0, 1fr); } }
+.stage { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.sw.p { background: var(--m-p); } .sw.s { background: var(--m-s); }
+
+.figs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+figcaption { font-family: var(--f-display); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: 14px; color: var(--muted); }
+.fig { width: 100%; max-width: 300px; height: auto; display: block; touch-action: manipulation; }
+.sil { fill: var(--body); }
+.z { fill: var(--muscle); cursor: pointer; transition: fill .12s; }
+.ink { fill: var(--lineart); pointer-events: none; }
+.z.has-s { fill: var(--m-s); }
+.z.has-p { fill: var(--m-p); }
+.z.hov { fill: var(--hover); }
+.z.sel { fill: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .z { transition: none; } }
+
+.readout { text-align: center; font-family: var(--f-mono); font-size: 12px; color: var(--muted); min-height: 18px; }
+.readout b { color: var(--ink); font-weight: 500; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font: inherit; cursor: pointer; font-size: 13px; padding: 5px 11px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+}
+.chip .n { font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-left: 6px; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chip[aria-pressed="true"] .n { color: var(--accent-ink); }
+
+.panel {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px;
+  display: flex; flex-direction: column; gap: 14px; position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); min-width: 0;
+}
+@media (max-width: 820px) { .panel { position: static; } }
+.eyebrow { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.ptitle { font-family: var(--f-display); font-weight: 800; font-size: 32px; line-height: 1; margin: 2px 0 0; text-wrap: balance; }
+.sub { color: var(--muted); font-size: 13px; margin: 0; }
+.empty { color: var(--muted); margin: 0; }
+h3 { font-size: 12px; font-family: var(--f-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 500; margin: 0; }
+
+.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 0; border-top: 1px solid var(--line); align-items: center; }
+.list li.click { cursor: pointer; }
+.list li.click:hover .name { color: var(--accent); }
+.list .name { font-weight: 600; min-width: 0; }
+.list .meta { font-family: var(--f-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.list .spark { grid-column: 2; grid-row: 1 / span 2; }
+.badge { font-family: var(--f-mono); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; padding: 1px 6px; border-radius: 4px; margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
+.badge.p { background: var(--m-p); color: var(--ink); }
+.badge.s { border: 1px solid var(--line); color: var(--muted); }
+.up { color: var(--good); }
+
+.spark .sa { fill: var(--accent); opacity: .12; }
+.spark .sl { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.spark .se { fill: var(--accent); }
+.spark.big { width: 100%; height: 72px; }
+
+form { display: grid; gap: 8px; margin: 0; }
+label { font-size: 12px; color: var(--muted); display: grid; gap: 4px; }
+input {
+  font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--bg); color: var(--ink); min-width: 0; width: 100%; box-sizing: border-box;
+}
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { font: inherit; cursor: pointer; border: 1px solid var(--accent); padding: 8px 14px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 14px; }
+.btn.ghost { background: transparent; color: var(--muted); border-color: var(--line); }
+.btn.danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+.linkish { font: inherit; font-size: 13px; background: none; border: 0; padding: 0; color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; justify-self: start; }
+
+.big { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.big .val { font-family: var(--f-display); font-weight: 800; font-size: 52px; line-height: 1; font-variant-numeric: tabular-nums; }
+.big .unit { font-family: var(--f-mono); color: var(--muted); }
+.big .delta { font-family: var(--f-mono); font-size: 13px; color: var(--muted); }
+
+.hint { color: var(--muted); margin: 0; font-size: 14px; }
+#mfig svg { width: 100%; max-width: 600px; height: auto; margin: 0 auto; display: block; touch-action: manipulation; }
+#mfig .sil { cursor: crosshair; }
+.pin { fill: var(--accent); stroke: var(--surface); stroke-width: 1.6; cursor: pointer; }
+.pin.on { r: 5.5; }
+.pin.draft { fill: var(--surface); stroke: var(--accent); stroke-dasharray: 2 1.6; }
+.lead { stroke: var(--muted); stroke-width: .6; }
+.lead.on { stroke: var(--accent); stroke-width: 1; }
+.lbl { cursor: pointer; }
+.lbl rect { fill: var(--surface); stroke: var(--line); stroke-width: .8; }
+.lbl.on rect { stroke: var(--accent); stroke-width: 1.6; }
+.lbl.draft rect { stroke: var(--accent); stroke-dasharray: 3 2; }
+.lbl .t { font-family: var(--f-body); font-size: 9px; fill: var(--muted); }
+.lbl .v { font-family: var(--f-mono); font-size: 13px; font-weight: 500; fill: var(--ink); }
+.lbl .d { font-family: var(--f-mono); font-size: 9px; fill: var(--muted); }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <span class="mark">IRONLOG</span>
+      <span class="tag">Maquette · données d'exemple</span>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button role="tab" id="tab-charges" aria-selected="true" aria-controls="v-charges">Charges</button>
+      <button role="tab" id="tab-mesures" aria-selected="false" aria-controls="v-mesures">Mensurations</button>
+    </nav>
+  </header>
+
+  <section id="v-charges" class="view" role="tabpanel" aria-labelledby="tab-charges">
+    <div class="stage">
+      <div class="toolbar">
+        <div class="seg" id="mode" role="group" aria-label="Niveau de détail">
+          <button id="mode-simple" data-mode="simple" aria-pressed="true">Simple</button>
+          <button id="mode-detail" data-mode="detail" aria-pressed="false">Détaillé</button>
+        </div>
+        <div class="legend">
+          <span><i class="sw p"></i>Travaillé en principal</span>
+          <span><i class="sw s"></i>En secondaire seulement</span>
+        </div>
+      </div>
+      <div class="figs" id="figs">
+        <figure><div id="fig-front"></div><figcaption>Face</figcaption></figure>
+        <figure><div id="fig-back"></div><figcaption>Dos</figcaption></figure>
+      </div>
+      <div class="readout" id="readout"></div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <aside class="panel" id="panel-c" aria-live="polite"></aside>
+  </section>
+
+  <section id="v-mesures" class="view" role="tabpanel" aria-labelledby="tab-mesures" hidden>
+    <div class="stage">
+      <p class="hint">Touche le corps à l'endroit que tu veux suivre pour y placer une nouvelle mesure.</p>
+      <div id="mfig"></div>
+    </div>
+    <aside class="panel" id="panel-m" aria-live="polite"></aside>
+  </section>
+</div>
+
+<script src="body-geo.js"></script>
+<script>
+// ---------- Muscles (la géométrie vient de body-geo.js) ----------
+const GROUPS = {
+  pectoraux: "Pectoraux", epaules: "Épaules", biceps: "Biceps", triceps: "Triceps",
+  avantbras: "Avant-bras", abdos: "Abdominaux", dos: "Dos", quadriceps: "Quadriceps",
+  adducteurs: "Adducteurs", fessiers: "Fessiers", ischios: "Ischio-jambiers", mollets: "Mollets",
+};
+
+const ZONES = [
+  { id: "pec-haut", g: "pectoraux", n: "Haut des pectoraux" },
+  { id: "pec-bas", g: "pectoraux", n: "Bas des pectoraux" },
+  { id: "delt-ant", g: "epaules", n: "Deltoïde antérieur" },
+  { id: "delt-lat", g: "epaules", n: "Deltoïde latéral" },
+  { id: "delt-post", g: "epaules", n: "Deltoïde postérieur" },
+  { id: "biceps", g: "biceps", n: "Biceps" },
+  { id: "triceps", g: "triceps", n: "Triceps" },
+  { id: "avantbras", g: "avantbras", n: "Avant-bras" },
+  { id: "grand-droit", g: "abdos", n: "Grand droit" },
+  { id: "obliques", g: "abdos", n: "Obliques et dentelés" },
+  { id: "trapezes", g: "dos", n: "Trapèzes" },
+  { id: "grand-rond", g: "dos", n: "Grand rond et infra-épineux" },
+  { id: "grand-dorsal", g: "dos", n: "Grand dorsal" },
+  { id: "lombaires", g: "dos", n: "Lombaires" },
+  { id: "droit-femoral", g: "quadriceps", n: "Droit fémoral" },
+  { id: "vaste-ext", g: "quadriceps", n: "Vaste externe" },
+  { id: "vaste-int", g: "quadriceps", n: "Vaste interne" },
+  { id: "adducteurs", g: "adducteurs", n: "Adducteurs" },
+  { id: "moyen-fessier", g: "fessiers", n: "Moyen fessier" },
+  { id: "grand-fessier", g: "fessiers", n: "Grand fessier" },
+  { id: "biceps-femoral", g: "ischios", n: "Biceps fémoral" },
+  { id: "semi-tendineux", g: "ischios", n: "Semi-tendineux" },
+  { id: "gastrocnemien", g: "mollets", n: "Gastrocnémiens" },
+  { id: "soleaire", g: "mollets", n: "Soléaire" },
+  { id: "tibial", g: "mollets", n: "Jambier antérieur" },
+];
+
+// Les mensurations réutilisent un repère de 200 × 440 autour du corps de face.
+const MT = (() => { const [bx, by, bw, bh] = GEO.front.bbox, s = 430 / bh; return { s, tx: 100 - (bx + bw / 2) * s, ty: 5 - by * s }; })();
+const toM = (X, Y) => [Math.round(MT.tx + X * MT.s), Math.round(MT.ty + Y * MT.s)];
+
+// ---------- Données d'exemple ----------
+const TODAY = new Date("2026-10-17T12:00:00");
+const daysAgo = d => { const t = new Date(TODAY); t.setDate(t.getDate() - d); return t.toISOString().slice(0, 10); };
+let uid = 0;
+const ex = (name, p, s, kgs, reps) => ({ id: "e" + (++uid), name, p, s, log: kgs.map((kg, i) => ({ d: daysAgo((kgs.length - 1 - i) * 14), kg, r: reps })) });
+const ms = (name, X, Y, vals) => ({ id: "m" + (++uid), name, x: toM(X, Y)[0], y: toM(X, Y)[1], log: vals.map((v, i) => ({ d: daysAgo((vals.length - 1 - i) * 28), v })) });
+
+const EX = [
+  ex("Développé couché", ["pec-bas"], ["pec-haut", "triceps", "delt-ant"], [75, 77.5, 77.5, 80, 82.5, 82.5, 85], 5),
+  ex("Développé incliné haltères", ["pec-haut"], ["delt-ant", "triceps"], [26, 26, 28, 28, 30, 30], 8),
+  ex("Écarté poulie vis-à-vis", ["pec-bas"], [], [15, 15, 17.5, 17.5, 20], 12),
+  ex("Développé militaire", ["delt-ant"], ["delt-lat", "triceps"], [45, 47.5, 47.5, 50, 52.5], 6),
+  ex("Élévations latérales", ["delt-lat"], [], [10, 10, 12, 12, 12, 14], 12),
+  ex("Oiseau à la machine", ["delt-post"], ["trapezes"], [35, 40, 40, 45], 12),
+  ex("Curl barre EZ", ["biceps"], ["avantbras"], [30, 32.5, 32.5, 35, 35, 37.5], 8),
+  ex("Curl marteau", ["avantbras"], ["biceps"], [14, 16, 16, 18], 10),
+  ex("Barre au front", ["triceps"], [], [30, 32.5, 35, 35, 37.5], 8),
+  ex("Extension poulie haute", ["triceps"], [], [25, 27.5, 30, 30], 12),
+  ex("Tractions lestées", ["grand-dorsal"], ["biceps", "delt-post"], [0, 5, 5, 7.5, 10, 12.5], 6),
+  ex("Rowing barre", ["grand-dorsal"], ["trapezes", "grand-rond", "delt-post", "biceps"], [60, 65, 65, 70, 72.5], 8),
+  ex("Shrugs haltères", ["trapezes"], ["avantbras"], [30, 32, 34, 36], 12),
+  ex("Soulevé de terre", ["lombaires", "grand-fessier"], ["biceps-femoral", "semi-tendineux", "trapezes", "avantbras"], [120, 130, 135, 140, 145, 150], 3),
+  ex("Squat", ["droit-femoral", "vaste-ext", "vaste-int"], ["grand-fessier", "adducteurs", "lombaires"], [100, 105, 110, 110, 115, 120], 5),
+  ex("Presse à cuisses", ["vaste-ext", "vaste-int"], ["grand-fessier"], [180, 200, 200, 220], 10),
+  ex("Leg curl assis", ["biceps-femoral", "semi-tendineux"], ["gastrocnemien"], [45, 50, 50, 55], 10),
+  ex("Hip thrust", ["grand-fessier"], ["biceps-femoral", "semi-tendineux", "moyen-fessier"], [100, 110, 120, 130, 140], 8),
+  ex("Abducteurs machine", ["moyen-fessier"], [], [50, 55, 60], 15),
+  ex("Mollets debout machine", ["gastrocnemien"], ["soleaire"], [80, 90, 90, 100, 100], 12),
+  ex("Crunch poulie", ["grand-droit"], ["obliques"], [40, 45, 45, 50], 12),
+];
+
+const MS = [
+  ms("Cou", 488, 405, [39, 39.5, 39.5, 40]),
+  ms("Épaules", 262, 520, [118, 119, 120, 121.5]),
+  ms("Poitrine", 420, 600, [104, 105, 105.5, 106.5, 107]),
+  ms("Biceps droit", 268, 715, [37, 37.5, 38, 38, 38.5]),
+  ms("Taille", 650, 880, [86, 85, 85, 84.5, 84]),
+  ms("Avant-bras gauche", 805, 880, [30, 30.5, 31, 31]),
+  ms("Cuisse gauche", 640, 1250, [60, 60.5, 61, 61.5, 62]),
+  ms("Mollet gauche", 650, 1700, [38, 38.5, 38.5, 39]),
+];
+
+// ---------- Utilitaires ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = v => v.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
+const signed = v => (v > 0 ? "+" : v < 0 ? "−" : "±") + fmt(Math.abs(v));
+const fdate = d => new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+const trunc = (s, n) => s.length > n ? s.slice(0, n - 1) + "…" : s;
+
+function spark(vals, w, h, cls = "") {
+  if (vals.length < 2) return "";
+  const mn = Math.min(...vals), mx = Math.max(...vals), r = mx - mn || 1, pad = 3;
+  const pts = vals.map((v, i) => [pad + i * (w - 2 * pad) / (vals.length - 1), h - pad - (v - mn) / r * (h - 2 * pad)]);
+  const line = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+  const area = `${line} L${pts.at(-1)[0].toFixed(1)} ${h} L${pts[0][0].toFixed(1)} ${h} Z`;
+  const e = pts.at(-1);
+  return `<svg class="spark ${cls}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" width="${w}" height="${h}" aria-hidden="true"><path class="sa" d="${area}"/><path class="sl" d="${line}"/><circle class="se" cx="${e[0].toFixed(1)}" cy="${e[1].toFixed(1)}" r="2.5"/></svg>`;
+}
+
+function bodySvg(view, withZones) {
+  const g = GEO[view];
+  const zs = withZones ? ZONES.filter(z => g.zones[z.id]).map(z => `<path class="z" d="${g.zones[z.id]}" data-zone="${z.id}" data-group="${z.g}"/>`).join("") : "";
+  return `<g transform="translate(0 ${g.h}) scale(1 -1)"><path class="sil" d="${g.sil}"/>${zs}<path class="ink" d="${g.line}"/></g>`;
+}
+const viewBox = (view, pad = 12) => { const [x, y, w, h] = GEO[view].bbox; return `${x - pad} ${y - pad} ${w + 2 * pad} ${h + 2 * pad}`; };
+
+// ---------- État ----------
+const S = { tab: "charges", mode: "simple", sel: null, hov: null, msel: null, draft: null, confirmDel: false };
+
+// ---------- Vue Charges ----------
+const zoneById = id => ZONES.find(z => z.id === id);
+const keyOf = el => S.mode === "simple" ? el.dataset.group : el.dataset.zone;
+const keys = () => S.mode === "simple" ? Object.keys(GROUPS) : ZONES.map(z => z.id);
+const nameOf = k => S.mode === "simple" ? GROUPS[k] : zoneById(k).n;
+const idsFor = k => S.mode === "simple" ? [k, ...ZONES.filter(z => z.g === k).map(z => z.id)] : [k, zoneById(k).g];
+
+function exFor(k) {
+  const ids = new Set(idsFor(k));
+  return EX.map(e => e.p.some(i => ids.has(i)) ? { e, role: "p" } : e.s.some(i => ids.has(i)) ? { e, role: "s" } : null)
+    .filter(Boolean)
+    .sort((a, b) => a.role === b.role ? 0 : a.role === "p" ? -1 : 1);
+}
+
+$("#fig-front").innerHTML = `<svg class="fig" viewBox="${viewBox("front")}" role="img" aria-label="Corps vu de face">${bodySvg("front", true)}</svg>`;
+$("#fig-back").innerHTML = `<svg class="fig" viewBox="${viewBox("back")}" role="img" aria-label="Corps vu de dos">${bodySvg("back", true)}</svg>`;
+
+function paint() {
+  const status = {};
+  keys().forEach(k => { status[k] = exFor(k)[0]?.role || null; });
+  document.querySelectorAll("#figs .z").forEach(p => {
+    const k = keyOf(p);
+    p.classList.toggle("has-p", status[k] === "p");
+    p.classList.toggle("has-s", status[k] === "s");
+    p.classList.toggle("hov", k === S.hov && k !== S.sel);
+    p.classList.toggle("sel", k === S.sel);
+  });
+  const k = S.hov || S.sel;
+  $("#readout").innerHTML = k ? `<b>${esc(nameOf(k))}</b>${S.mode === "detail" ? " · " + esc(GROUPS[zoneById(k).g]) : ""}` : "Survole ou touche un muscle";
+}
+
+function renderChips() {
+  $("#chips").innerHTML = keys().map(k => {
+    const n = exFor(k).filter(x => x.role === "p").length;
+    return `<button class="chip" data-key="${k}" aria-pressed="${k === S.sel}">${esc(nameOf(k))}<span class="n">${n}</span></button>`;
+  }).join("");
+}
+
+function exItem({ e, role }) {
+  const last = e.log.at(-1), first = e.log[0];
+  const weeks = e.log.length > 1 ? Math.round((new Date(last.d) - new Date(first.d)) / 6048e5) : 0;
+  const gain = e.log.length > 1 ? last.kg - first.kg : 0;
+  const meta = last
+    ? `${fmt(last.kg)} kg × ${last.r}${e.log.length > 1 ? ` · <span class="${gain > 0 ? "up" : ""}">${signed(gain)} kg</span> en ${weeks} sem.` : ""}`
+    : "Aucune charge enregistrée";
+  return `<li><div class="name">${esc(e.name)}<span class="badge ${role}">${role === "p" ? "principal" : "secondaire"}</span></div>${spark(e.log.map(l => l.kg), 72, 26)}<div class="meta">${meta}</div></li>`;
+}
+
+function renderPanelC() {
+  const P = $("#panel-c");
+  if (!S.sel) {
+    const covered = keys().filter(k => exFor(k).some(x => x.role === "p")).length;
+    P.innerHTML = `
+      <div><div class="eyebrow">Charges</div><h2 class="ptitle">Choisis un muscle</h2></div>
+      <p class="empty">Touche une zone du schéma ou un nom dans la liste. Les zones colorées ont déjà des exercices.</p>
+      <div class="big"><span class="val">${EX.length}</span><span class="unit">exercices suivis</span></div>
+      <p class="sub">${covered} ${S.mode === "simple" ? "groupes" : "muscles"} sur ${keys().length} travaillés en principal.</p>`;
+    return;
+  }
+  const k = S.sel, list = exFor(k);
+  const parts = S.mode === "simple" ? ZONES.filter(z => z.g === k) : [];
+  const eyebrow = S.mode === "simple" ? "Groupe musculaire" : GROUPS[zoneById(k).g];
+  P.innerHTML = `
+    <div><div class="eyebrow">${esc(eyebrow)}</div><h2 class="ptitle">${esc(nameOf(k))}</h2></div>
+    ${parts.length > 1 ? `<p class="sub">Regroupe : ${parts.map(z => esc(z.n)).join(", ")}. Passe en mode détaillé pour les séparer.</p>` : ""}
+    ${list.length ? `<ul class="list">${list.map(exItem).join("")}</ul>` : `<p class="empty">Aucun exercice pour l'instant.</p>`}
+    <form id="add-ex" autocomplete="off">
+      <h3>Ajouter un exercice</h3>
+      <label>Exercice ou machine<input id="ex-name" required placeholder="ex. Pec deck"></label>
+      <div class="row">
+        <label>Charge (kg)<input id="ex-kg" type="number" step="0.5" min="0" inputmode="decimal" placeholder="60"></label>
+        <label>Répétitions<input id="ex-reps" type="number" step="1" min="1" inputmode="numeric" placeholder="8"></label>
+      </div>
+      <div class="btns"><button class="btn" type="submit">Ajouter à ${esc(nameOf(k))}</button></div>
+    </form>`;
+  $("#add-ex").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const name = $("#ex-name").value.trim();
+    if (!name) return;
+    const kg = parseFloat($("#ex-kg").value), r = parseInt($("#ex-reps").value, 10);
+    EX.push({ id: "e" + (++uid), name, p: [k], s: [], log: isNaN(kg) ? [] : [{ d: daysAgo(0), kg, r: isNaN(r) ? 1 : r }] });
+    renderC();
+  });
+}
+
+function renderC() {
+  document.querySelectorAll("#mode button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === S.mode));
+  paint(); renderChips(); renderPanelC();
+}
+
+const figs = $("#figs");
+figs.addEventListener("pointerover", e => { const z = e.target.closest(".z"); const k = z ? keyOf(z) : null; if (k !== S.hov) { S.hov = k; paint(); } });
+figs.addEventListener("pointerleave", () => { S.hov = null; paint(); });
+figs.addEventListener("click", e => {
+  const z = e.target.closest(".z"); if (!z) return;
+  const k = keyOf(z); S.sel = S.sel === k ? null : k; renderC();
+});
+$("#chips").addEventListener("click", e => {
+  const c = e.target.closest(".chip"); if (!c) return;
+  S.sel = S.sel === c.dataset.key ? null : c.dataset.key; renderC();
+});
+$("#mode").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || b.dataset.mode === S.mode) return;
+  if (S.sel) S.sel = b.dataset.mode === "simple" ? zoneById(S.sel)?.g ?? S.sel : ZONES.find(z => z.g === S.sel)?.id ?? null;
+  S.mode = b.dataset.mode; S.hov = null; renderC();
+});
+
+// ---------- Vue Mensurations ----------
+const LW = 100, LH = 36, GAP = 6;
+function layout(items) {
+  [items.filter(p => p.x < 100), items.filter(p => p.x >= 100)].forEach(side => {
+    side.sort((a, b) => a.y - b.y);
+    let prev = -1e9;
+    side.forEach(p => { p.ly = Math.max(p.y - LH / 2, prev + LH + GAP, 4); prev = p.ly; });
+    let max = 440 - LH - 4;
+    for (let i = side.length - 1; i >= 0; i--) { if (side[i].ly > max) side[i].ly = max; max = side[i].ly - LH - GAP; }
+  });
+}
+
+function renderFigM() {
+  const items = S.draft ? [...MS, { id: "draft", name: "Nouvelle mesure", x: S.draft.x, y: S.draft.y, log: [] }] : [...MS];
+  layout(items);
+  let leads = "", lbls = "", pins = "";
+  items.forEach(p => {
+    const left = p.x < 100, bx = left ? -118 : 218, edge = left ? -18 : 218;
+    const on = p.id === S.msel, draft = p.id === "draft";
+    const last = p.log.at(-1), dv = p.log.length > 1 ? last.v - p.log[0].v : null;
+    leads += `<line class="lead${on || draft ? " on" : ""}" x1="${p.x}" y1="${p.y}" x2="${edge}" y2="${p.ly + LH / 2}"/>`;
+    lbls += `<g class="lbl${on ? " on" : ""}${draft ? " draft" : ""}" data-id="${p.id}">
+      <rect x="${bx}" y="${p.ly}" width="${LW}" height="${LH}" rx="6"/>
+      <text class="t" x="${bx + 8}" y="${p.ly + 13}">${esc(trunc(p.name, 18))}</text>
+      <text class="v" x="${bx + 8}" y="${p.ly + 29}">${last ? fmt(last.v) + " cm" : "—"}</text>
+      ${dv !== null ? `<text class="d" x="${bx + LW - 7}" y="${p.ly + 29}" text-anchor="end">${signed(dv)}</text>` : ""}
+    </g>`;
+    pins += `<circle class="pin${on ? " on" : ""}${draft ? " draft" : ""}" data-id="${p.id}" cx="${p.x}" cy="${p.y}" r="4"/>`;
+  });
+  $("#mfig").innerHTML = `<svg id="msvg" viewBox="-124 0 448 440" role="img" aria-label="Corps vu de face avec les points de mesure"><g transform="translate(${MT.tx} ${MT.ty}) scale(${MT.s})">${bodySvg("front", false)}</g>${leads}${lbls}${pins}</svg>`;
+}
+
+function renderPanelM() {
+  const P = $("#panel-m");
+  if (S.draft) {
+    P.innerHTML = `
+      <div><div class="eyebrow">Nouveau point</div><h2 class="ptitle">Nouvelle mesure</h2></div>
+      <p class="sub">Point placé. Touche ailleurs sur le corps pour le déplacer.</p>
+      <form id="add-m" autocomplete="off">
+        <label>Nom de la mesure<input id="m-name" required placeholder="ex. Biceps gauche"></label>
+        <label>Première mesure (cm)<input id="m-val" type="number" step="0.1" min="0" inputmode="decimal" placeholder="38,5"></label>
+        <div class="btns"><button class="btn" type="submit">Créer le point</button><button class="btn ghost" type="button" id="m-cancel">Annuler</button></div>
+      </form>`;
+    $("#add-m").addEventListener("submit", ev => {
+      ev.preventDefault();
+      const name = $("#m-name").value.trim(); if (!name) return;
+      const v = parseFloat($("#m-val").value);
+      const m = { id: "m" + (++uid), name, x: S.draft.x, y: S.draft.y, log: isNaN(v) ? [] : [{ d: daysAgo(0), v }] };
+      MS.push(m); S.draft = null; S.msel = m.id; renderM();
+    });
+    $("#m-cancel").addEventListener("click", () => { S.draft = null; renderM(); });
+    return;
+  }
+  const m = MS.find(x => x.id === S.msel);
+  if (!m) {
+    P.innerHTML = `
+      <div><div class="eyebrow">Mensurations</div><h2 class="ptitle">Tes mesures</h2></div>
+      <ul class="list">${MS.map(x => {
+        const last = x.log.at(-1), dv = x.log.length > 1 ? last.v - x.log[0].v : null;
+        return `<li class="click" data-id="${x.id}" tabindex="0"><div class="name">${esc(x.name)}</div>${spark(x.log.map(l => l.v), 64, 24)}<div class="meta">${last ? fmt(last.v) + " cm" : "—"}${dv !== null ? " · " + signed(dv) + " cm" : ""}</div></li>`;
+      }).join("")}</ul>`;
+    P.querySelectorAll("li.click").forEach(li => {
+      const go = () => { S.msel = li.dataset.id; renderM(); };
+      li.addEventListener("click", go);
+      li.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    });
+    return;
+  }
+  const last = m.log.at(-1), first = m.log[0];
+  const dv = m.log.length > 1 ? last.v - first.v : null;
+  P.innerHTML = `
+    <div><div class="eyebrow">Mensuration</div><h2 class="ptitle">${esc(m.name)}</h2></div>
+    <div class="big"><span class="val">${last ? fmt(last.v) : "—"}</span><span class="unit">cm</span>
+      ${dv !== null ? `<span class="delta">${signed(dv)} cm depuis le ${fdate(first.d)}</span>` : ""}</div>
+    ${spark(m.log.map(l => l.v), 300, 72, "big")}
+    <form id="log-m" autocomplete="off">
+      <h3>Nouvelle entrée</h3>
+      <div class="row"><input id="m-new" type="number" step="0.1" min="0" inputmode="decimal" placeholder="cm" aria-label="Mesure en centimètres" required><button class="btn" type="submit">Enregistrer</button></div>
+    </form>
+    ${m.log.length ? `<div><h3>Historique</h3><ul class="list">${m.log.slice(-5).reverse().map(l => `<li><div class="meta">${fdate(l.d)}</div><div class="meta">${fmt(l.v)} cm</div></li>`).join("")}</ul></div>` : ""}
+    <div class="btns">
+      <button class="linkish" type="button" id="m-back">Toutes les mesures</button>
+    </div>
+    ${S.confirmDel
+      ? `<div class="btns"><button class="btn danger" type="button" id="m-del-yes">Supprimer ${esc(m.name)} et son historique</button><button class="btn ghost" type="button" id="m-del-no">Garder</button></div>`
+      : `<button class="linkish" type="button" id="m-del">Supprimer ce point</button>`}`;
+  $("#log-m").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const v = parseFloat($("#m-new").value); if (isNaN(v)) return;
+    m.log.push({ d: daysAgo(0), v }); renderM();
+  });
+  $("#m-back").addEventListener("click", () => { S.msel = null; renderM(); });
+  if (S.confirmDel) {
+    $("#m-del-yes").addEventListener("click", () => { MS.splice(MS.indexOf(m), 1); S.msel = null; S.confirmDel = false; renderM(); });
+    $("#m-del-no").addEventListener("click", () => { S.confirmDel = false; renderPanelM(); });
+  } else {
+    $("#m-del").addEventListener("click", () => { S.confirmDel = true; renderPanelM(); });
+  }
+}
+
+function renderM() { S.confirmDel = false; renderFigM(); renderPanelM(); }
+
+$("#mfig").addEventListener("click", ev => {
+  const hit = ev.target.closest("[data-id]");
+  if (hit) {
+    if (hit.dataset.id !== "draft") { S.msel = hit.dataset.id; S.draft = null; renderM(); }
+    return;
+  }
+  if (!ev.target.classList.contains("sil")) return;
+  const svg = $("#msvg"), pt = svg.createSVGPoint();
+  pt.x = ev.clientX; pt.y = ev.clientY;
+  const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+  S.draft = { x: Math.round(p.x), y: Math.round(p.y) }; S.msel = null;
+  const keep = S.draft && $("#m-name") ? { n: $("#m-name").value, v: $("#m-val").value } : null;
+  renderM();
+  if (keep) { $("#m-name").value = keep.n; $("#m-val").value = keep.v; }
+  $("#m-name").focus({ preventScroll: true });
+});
+
+// ---------- Onglets ----------
+function setTab(t) {
+  S.tab = t;
+  $("#tab-charges").setAttribute("aria-selected", t === "charges");
+  $("#tab-mesures").setAttribute("aria-selected", t === "mesures");
+  $("#v-charges").hidden = t !== "charges";
+  $("#v-mesures").hidden = t !== "mesures";
+}
+$("#tab-charges").addEventListener("click", () => setTab("charges"));
+$("#tab-mesures").addEventListener("click", () => setTab("mesures"));
+
+renderC(); renderM();
+if (location.hash === "#mensurations") setTab("mesures");
+</script>

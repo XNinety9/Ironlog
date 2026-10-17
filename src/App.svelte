@@ -1,0 +1,76 @@
+<script lang="ts">
+  import { onMount } from 'svelte'
+  import { store } from './lib/store.svelte'
+  import Charges from './views/Charges.svelte'
+  import Mensurations from './views/Mensurations.svelte'
+
+  type Tab = 'charges' | 'mensurations'
+  const fromHash = (): Tab => (location.hash === '#mensurations' ? 'mensurations' : 'charges')
+
+  let tab = $state<Tab>(fromHash())
+
+  function go(t: Tab) {
+    tab = t
+    history.replaceState(null, '', '#' + t)
+  }
+
+  onMount(() => {
+    void store.load()
+    const onHash = () => (tab = fromHash())
+    addEventListener('hashchange', onHash)
+    return () => removeEventListener('hashchange', onHash)
+  })
+</script>
+
+<div class="app">
+  <header class="top">
+    <span class="mark">IRONLOG</span>
+    <div class="seg" role="tablist" aria-label="Sections">
+      <button role="tab" id="tab-charges" aria-selected={tab === 'charges'} aria-controls="v-charges" onclick={() => go('charges')}>Charges</button>
+      <button role="tab" id="tab-mensurations" aria-selected={tab === 'mensurations'} aria-controls="v-mensurations" onclick={() => go('mensurations')}>Mensurations</button>
+    </div>
+  </header>
+
+  {#if store.status === 'memory'}
+    <p class="warn" role="status">
+      Le stockage du navigateur est indisponible (navigation privée ?). Tes saisies seront perdues à la fermeture de la page.
+    </p>
+  {/if}
+
+  {#if store.status !== 'loading'}
+    {#if store.isEmpty}
+      <div class="onboard">
+        <p>Aucune donnée pour l'instant. Commence directement sur le schéma, ou charge des exemples pour voir à quoi ressemble l'app remplie.</p>
+        <button class="btn ghost" onclick={() => store.loadSamples()}>Charger des exemples</button>
+      </div>
+    {/if}
+    <div id="v-charges" role="tabpanel" aria-labelledby="tab-charges" hidden={tab !== 'charges'}>
+      <Charges />
+    </div>
+    <div id="v-mensurations" role="tabpanel" aria-labelledby="tab-mensurations" hidden={tab !== 'mensurations'}>
+      <Mensurations />
+    </div>
+  {/if}
+</div>
+
+<style>
+  .app {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .mark { font-family: var(--f-display); font-weight: 800; font-size: 32px; letter-spacing: 0.05em; line-height: 1; }
+  .warn { margin: 0; padding: 10px 14px; border: 1px solid var(--danger); color: var(--danger); border-radius: 10px; font-size: 14px; }
+  .onboard {
+    display: flex; gap: 12px 16px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    padding: 12px 16px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); font-size: 14px;
+  }
+  .onboard p { margin: 0; max-width: 65ch; }
+</style>
