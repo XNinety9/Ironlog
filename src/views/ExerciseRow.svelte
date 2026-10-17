@@ -1,11 +1,12 @@
 <script lang="ts">
+  import DateField from '../lib/DateField.svelte'
   import LineChart from '../lib/LineChart.svelte'
   import Sparkline from '../lib/Sparkline.svelte'
   import { RELIABLE_REPS, epley, type ChartPoint } from '../lib/chart'
   import MusclePicker from '../lib/body/MusclePicker.svelte'
   import { nameOf } from '../lib/body/muscles'
   import { fdate, fmt, parseNum, signed, weeksBetween } from '../lib/format'
-  import type { Exercise, Role } from '../lib/model'
+  import { today, type Exercise, type Role } from '../lib/model'
   import { prefs } from '../lib/prefs.svelte'
   import { store } from '../lib/store.svelte'
 
@@ -38,6 +39,7 @@
 
   let kg = $state('')
   let reps = $state('')
+  let date = $state(today())
   let confirmDel = $state(false)
 
   let editing = $state(false)
@@ -79,8 +81,8 @@
     e.preventDefault()
     const k = parseNum(kg)
     const r = parseInt(reps, 10)
-    if (Number.isNaN(k) || Number.isNaN(r) || r < 1) return
-    store.logLoad(ex.id, k, r)
+    if (Number.isNaN(k) || Number.isNaN(r) || r < 1 || !date || date > today()) return
+    store.logLoad(ex.id, k, r, date)
   }
 </script>
 
@@ -126,6 +128,7 @@
           <label>Répétitions<input id="log-reps-{ex.id}" bind:value={reps} inputmode="numeric" required /></label>
           <button class="btn" type="submit">Enregistrer</button>
         </div>
+        <DateField id="log-date-{ex.id}" bind:value={date} />
       </form>
 
       {#if ex.log.length}

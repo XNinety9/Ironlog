@@ -1,7 +1,9 @@
 <script lang="ts">
+  import DateField from '../lib/DateField.svelte'
   import LineChart from '../lib/LineChart.svelte'
   import Sparkline from '../lib/Sparkline.svelte'
   import { fdate, fmt, parseNum, signed } from '../lib/format'
+  import { today } from '../lib/model'
   import { store } from '../lib/store.svelte'
 
   interface Props {
@@ -20,6 +22,7 @@
   let newName = $state('')
   let newVal = $state('')
   let entry = $state('')
+  let date = $state(today())
   let confirmDel = $state(false)
   let nameInput = $state<HTMLInputElement>()
 
@@ -31,6 +34,7 @@
     void selId
     confirmDel = false
     entry = ''
+    date = today()
   })
 
   function create(e: SubmitEvent) {
@@ -46,8 +50,8 @@
   function log(e: SubmitEvent) {
     e.preventDefault()
     const v = parseNum(entry)
-    if (!m || Number.isNaN(v)) return
-    store.logMeasure(m.id, v)
+    if (!m || Number.isNaN(v) || !date || date > today()) return
+    store.logMeasure(m.id, v, date)
     entry = ''
   }
 </script>
@@ -92,6 +96,7 @@
         <input id="m-entry" bind:value={entry} inputmode="decimal" placeholder="cm" aria-label="Mesure en centimètres" required />
         <button class="btn" type="submit">Enregistrer</button>
       </div>
+      <DateField id="m-date" bind:value={date} />
     </form>
 
     {#if m.log.length}
