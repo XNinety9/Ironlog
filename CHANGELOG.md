@@ -2,6 +2,11 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Chaque section `## [X.Y.Z]` alimente les notes de la release correspondante.
 
+## [Unreleased]
+
+### Ajouté
+- Le message proposant de charger des exemples peut être masqué ; le choix est mémorisé sur l'appareil.
+
 ## [1.0.1] - 2026-10-17
 
 ### Mensurations

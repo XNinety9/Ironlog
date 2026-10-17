@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { prefs } from './lib/prefs.svelte'
   import { pwa, requestPersistence } from './lib/pwa.svelte'
   import { store } from './lib/store.svelte'
   import BackupSection from './views/BackupSection.svelte'
@@ -49,10 +50,13 @@
   {/if}
 
   {#if store.status !== 'loading'}
-    {#if store.isEmpty}
+    {#if store.isEmpty && !prefs.samplesHidden}
       <div class="onboard">
         <p>Aucune donnée pour l'instant. Commence directement sur le schéma, ou charge des exemples pour voir à quoi ressemble l'app remplie.</p>
-        <button class="btn ghost" onclick={() => store.loadSamples()}>Charger des exemples</button>
+        <div class="btns">
+          <button class="btn ghost" onclick={() => store.loadSamples()}>Charger des exemples</button>
+          <button class="btn ghost" onclick={() => (prefs.samplesHidden = true)}>Masquer</button>
+        </div>
       </div>
     {/if}
     <div id="v-charges" role="tabpanel" aria-labelledby="tab-charges" hidden={tab !== 'charges'}>
