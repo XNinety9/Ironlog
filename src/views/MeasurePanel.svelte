@@ -1,4 +1,5 @@
 <script lang="ts">
+  import LineChart from '../lib/LineChart.svelte'
   import Sparkline from '../lib/Sparkline.svelte'
   import { fdate, fmt, parseNum, signed } from '../lib/format'
   import { store } from '../lib/store.svelte'
@@ -77,7 +78,13 @@
         <span class="delta">{signed(last.value - first.value)} cm depuis le {fdate(first.date)}</span>
       {/if}
     </div>
-    <Sparkline values={m.log.map((l) => l.value)} width={300} height={72} fluid />
+    {#if m.log.length}
+      <LineChart
+        points={m.log.map((l) => ({ date: l.date, value: l.value }))}
+        unit="cm"
+        title="{m.name} : {fmt(last!.value)} cm au dernier relevé"
+      />
+    {/if}
 
     <form onsubmit={log} autocomplete="off">
       <h3>Nouvelle entrée</h3>

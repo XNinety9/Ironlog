@@ -3,11 +3,9 @@
     values: number[]
     width?: number
     height?: number
-    /** Étire la courbe sur toute la largeur du conteneur. */
-    fluid?: boolean
   }
 
-  let { values, width = 72, height = 26, fluid = false }: Props = $props()
+  let { values, width = 72, height = 26 }: Props = $props()
 
   const pts = $derived.by(() => {
     const mn = Math.min(...values)
@@ -27,18 +25,10 @@
 </script>
 
 {#if values.length > 1 && end}
-  <svg
-    class="spark"
-    class:fluid
-    viewBox="0 0 {width} {height}"
-    preserveAspectRatio="none"
-    width={fluid ? undefined : width}
-    height={fluid ? undefined : height}
-    aria-hidden="true"
-  >
+  <svg class="spark" viewBox="0 0 {width} {height}" {width} {height} aria-hidden="true">
     <path class="sa" d={area} />
     <path class="sl" d={line} />
-    {#if !fluid}<circle class="se" cx={end[0]} cy={end[1]} r="2.5" />{/if}
+    <circle class="se" cx={end[0]} cy={end[1]} r="2.5" />
   </svg>
 {/if}
 
@@ -46,8 +36,6 @@
   .sa { fill: var(--accent); opacity: 0.12; }
   .sl {
     fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round;
-    vector-effect: non-scaling-stroke;
   }
   .se { fill: var(--accent); }
-  .fluid { width: 100%; height: 72px; display: block; }
 </style>
