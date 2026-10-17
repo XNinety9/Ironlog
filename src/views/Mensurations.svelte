@@ -86,6 +86,8 @@
     const kind = el.dataset.drag as 'pin' | 'label'
     const m = id === 'draft' ? draft : store.measure(id)
     if (!m) return
+    // À la souris, l'appui démarrerait sinon une sélection de texte qui suit le glisser.
+    if (e.pointerType === 'mouse') e.preventDefault()
     const g = toGeo(e.clientX, e.clientY)
     const labelY = labelCenterGeo(id)
     drag = {
@@ -329,7 +331,10 @@
 
 <style>
   .hint { color: var(--muted); margin: 0; font-size: 14px; }
-  svg { width: 100%; max-width: 600px; height: auto; margin: 0 auto; display: block; touch-action: manipulation; }
+  svg {
+    width: 100%; max-width: 600px; height: auto; margin: 0 auto; display: block; touch-action: manipulation;
+    -webkit-user-select: none; user-select: none;
+  }
   svg :global(.sil) { cursor: crosshair; }
   .pin { fill: var(--accent); stroke: var(--surface); stroke-width: 1.6; pointer-events: none; }
   .hit { fill: transparent; cursor: grab; outline: none; touch-action: none; }
