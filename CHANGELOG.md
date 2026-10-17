@@ -2,12 +2,15 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Chaque section `## [X.Y.Z]` alimente les notes de la release correspondante.
 
-## [Unreleased]
+## [1.0.1] - 2026-10-17
 
 ### Mensurations
 - Les points se déplacent par glisser-déposer, en restant sur la silhouette.
 - Les étiquettes se déplacent à la verticale ; leur position est mémorisée et un lien les replace automatiquement.
 - Au clavier : les flèches déplacent le point ou l'étiquette qui a le focus.
+
+### Corrigé
+- Déplacer une étiquette à la souris ne sélectionne plus le texte de la page.
 
 ## [1.0.0] - 2026-10-17
 
