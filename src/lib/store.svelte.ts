@@ -69,6 +69,13 @@ class Store {
     return ex
   }
 
+  updateExercise(id: string, patch: Pick<Exercise, 'name' | 'primary' | 'secondary'>): void {
+    const ex = this.exercise(id)
+    if (!ex) return
+    Object.assign(ex, patch)
+    void this.put('exercises', ex)
+  }
+
   logLoad(id: string, kg: number, reps: number, date: IsoDate = today()): void {
     const ex = this.exercise(id)
     if (!ex) return

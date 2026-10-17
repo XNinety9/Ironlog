@@ -1,4 +1,5 @@
 <script lang="ts">
+  import MusclePicker from '../lib/body/MusclePicker.svelte'
   import { GROUPS, ZONES, groupOf, keysFor, nameOf, type Mode } from '../lib/body/muscles'
   import { parseNum } from '../lib/format'
   import { exercisesFor } from '../lib/model'
@@ -17,16 +18,35 @@
   let name = $state('')
   let kg = $state('')
   let reps = $state('')
+  let picking = $state(false)
+  let primary = $state<string[]>([])
+  let secondary = $state<string[]>([])
+  let error = $state('')
+
+  // Un nouvel exercice part du muscle sélectionné ; le sélecteur permet d'en ajouter d'autres.
+  $effect(() => {
+    primary = sel ? [sel] : []
+    secondary = []
+    picking = false
+    error = ''
+  })
 
   function add(e: SubmitEvent) {
     e.preventDefault()
     const n = name.trim()
     if (!n || !sel) return
+    if (!primary.length) {
+      error = 'Choisis au moins un muscle principal.'
+      return
+    }
     const k = parseNum(kg)
     const r = parseInt(reps, 10)
-    const ex = store.addExercise(n, [sel], [], Number.isNaN(k) ? undefined : { kg: k, reps: Number.isNaN(r) ? 1 : r })
+    const ex = store.addExercise(n, primary, secondary, Number.isNaN(k) ? undefined : { kg: k, reps: Number.isNaN(r) ? 1 : r })
     open = ex.id
-    name = kg = reps = ''
+    name = kg = reps = error = ''
+    primary = [sel]
+    secondary = []
+    picking = false
   }
 </script>
 
@@ -67,7 +87,17 @@
         <label>Charge (kg)<input id="ex-kg" bind:value={kg} inputmode="decimal" placeholder="60" /></label>
         <label>Répétitions<input id="ex-reps" bind:value={reps} inputmode="numeric" placeholder="8" /></label>
       </div>
-      <div class="btns"><button class="btn" type="submit">Ajouter à {nameOf(sel)}</button></div>
+      {#if picking}
+        <MusclePicker bind:primary bind:secondary />
+      {:else}
+        <p class="sub">
+          Principal : {primary.map(nameOf).join(', ')}{#if secondary.length}{' · '}Secondaire : {secondary.map(nameOf).join(', ')}{/if}.
+          <button class="linkish" type="button" onclick={() => (picking = true)}>Choisir d'autres muscles</button>
+        </p>
+      {/if}
+      {#if error}<p class="err" role="alert">{error}</p>{/if}
+      <div class="btns"><button class="btn" type="submit">Ajouter l'exercice</button></div>
     </form>
   {/if}
 </aside>
+

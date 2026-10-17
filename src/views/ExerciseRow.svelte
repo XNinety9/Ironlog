@@ -2,6 +2,7 @@
   import LineChart from '../lib/LineChart.svelte'
   import Sparkline from '../lib/Sparkline.svelte'
   import { RELIABLE_REPS, epley, type ChartPoint } from '../lib/chart'
+  import MusclePicker from '../lib/body/MusclePicker.svelte'
   import { nameOf } from '../lib/body/muscles'
   import { fdate, fmt, parseNum, signed, weeksBetween } from '../lib/format'
   import type { Exercise, Role } from '../lib/model'
@@ -39,13 +40,39 @@
   let reps = $state('')
   let confirmDel = $state(false)
 
+  let editing = $state(false)
+  let eName = $state('')
+  let ePrimary = $state<string[]>([])
+  let eSecondary = $state<string[]>([])
+  let eError = $state('')
+
+  function startEdit() {
+    eName = ex.name
+    ePrimary = [...ex.primary]
+    eSecondary = [...ex.secondary]
+    eError = ''
+    editing = true
+  }
+
+  function saveEdit(e: SubmitEvent) {
+    e.preventDefault()
+    const name = eName.trim()
+    if (!name) return
+    if (!ePrimary.length) {
+      eError = 'Choisis au moins un muscle principal.'
+      return
+    }
+    store.updateExercise(ex.id, { name, primary: ePrimary, secondary: eSecondary })
+    editing = false
+  }
+
   // Pré-remplit avec la dernière perf : le cas courant est de la reprendre ou de l'ajuster.
   $effect(() => {
     if (open) {
       kg = last ? String(last.kg).replace('.', ',') : ''
       reps = last ? String(last.reps) : ''
       confirmDel = false
-    }
+    } else editing = false
   })
 
   function log(e: SubmitEvent) {
@@ -113,17 +140,33 @@
         </ul>
       {/if}
 
-      <p class="sub">
-        Principal : {ex.primary.map(nameOf).join(', ')}{#if ex.secondary.length}{' · '}Secondaire : {ex.secondary.map(nameOf).join(', ')}{/if}
-      </p>
-
-      {#if confirmDel}
-        <div class="btns">
-          <button class="btn danger" onclick={() => store.deleteExercise(ex.id)}>Supprimer {ex.name} et son historique</button>
-          <button class="btn ghost" onclick={() => (confirmDel = false)}>Garder</button>
-        </div>
+      {#if editing}
+        <form class="edit" onsubmit={saveEdit} autocomplete="off">
+          <h3>Modifier l'exercice</h3>
+          <label>Nom<input id="edit-name-{ex.id}" bind:value={eName} required /></label>
+          <MusclePicker bind:primary={ePrimary} bind:secondary={eSecondary} />
+          {#if eError}<p class="err" role="alert">{eError}</p>{/if}
+          <div class="btns">
+            <button class="btn" type="submit">Enregistrer les modifications</button>
+            <button class="btn ghost" type="button" onclick={() => (editing = false)}>Annuler</button>
+          </div>
+        </form>
       {:else}
-        <button class="linkish" onclick={() => (confirmDel = true)}>Supprimer cet exercice</button>
+        <p class="sub">
+          Principal : {ex.primary.map(nameOf).join(', ')}{#if ex.secondary.length}{' · '}Secondaire : {ex.secondary.map(nameOf).join(', ')}{/if}
+        </p>
+
+        {#if confirmDel}
+          <div class="btns">
+            <button class="btn danger" onclick={() => store.deleteExercise(ex.id)}>Supprimer {ex.name} et son historique</button>
+            <button class="btn ghost" onclick={() => (confirmDel = false)}>Garder</button>
+          </div>
+        {:else}
+          <div class="btns gap">
+            <button class="linkish" onclick={startEdit}>Modifier le nom et les muscles</button>
+            <button class="linkish danger" onclick={() => (confirmDel = true)}>Supprimer</button>
+          </div>
+        {/if}
       {/if}
     </div>
   {/if}
@@ -131,5 +174,7 @@
 
 <style>
   .detail { display: grid; gap: 12px; padding: 4px 0 14px; min-width: 0; }
+  .edit { padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+  .gap { gap: 16px; }
   .chart-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 </style>
