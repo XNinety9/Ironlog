@@ -4,7 +4,7 @@
 
 FROM cgr.dev/chainguard/node:latest
 WORKDIR /app
-COPY server/package.json server/db.js server/validate.js server/app.js server/index.js ./
+COPY backend/package.json backend/db.js backend/validate.js backend/app.js backend/index.js ./
 COPY package.json /tmp/root-package.json
 # Version de l'app, lue depuis le package.json racine (même numéro que le front et le tag de release).
 RUN ["node", "-e", "const v = require('/tmp/root-package.json').version; require('fs').writeFileSync('version.json', JSON.stringify({ version: v }))"]

@@ -1,10 +1,10 @@
 .git
 .github
-node_modules
-dist
+.vscode
+**/node_modules
+frontend/dist
+.data
 maquette
 outils
-Dockerfile
 docker-compose.yml
 .dockerignore
-.data

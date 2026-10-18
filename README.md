@@ -14,6 +14,17 @@ Les données sont enregistrées sur le serveur (SQLite, dans un volume hors du c
 - **Échange** : `POST /api/sync` envoie les modifications locales et reçoit tout ce qui a changé depuis le dernier échange (curseur de révision). Il a lieu au démarrage, après chaque modification, au retour du réseau et toutes les minutes.
 - **Identité** : l'API fait confiance à l'en-tête `X-Auth-Request-User` posé par le reverse proxy (Caddy + oauth2-proxy). Elle ne doit donc être joignable qu'à travers lui. Sans SSO (développement, compose local), `IRONLOG_DEV_USER` attribue toutes les données à un utilisateur fixe.
 
+## Structure du dépôt
+
+```
+frontend/   PWA Svelte : src/, public/, service worker (sw/), Dockerfile, nginx et sonde (docker/)
+backend/    API de synchronisation Node + SQLite : *.js, tests (test/), Dockerfile
+outils/     script de vectorisation du schéma du corps
+maquette/   première maquette HTML, gardée comme référence
+```
+
+La racine est un workspace npm (`frontend`, `backend`) : `npm install`, `npm run dev`, `npm run build`… s'y lancent directement. Son `package.json` porte **la** version de l'app, commune au front, au back et aux tags de release. Les deux Dockerfiles se construisent depuis la racine (`docker compose build`).
+
 ## Développement
 
 ```sh
@@ -25,11 +36,11 @@ npm run test:api # tests de l'API (node:test, aucune dépendance)
 npm run build
 ```
 
-L'API (`server/`) n'a aucune dépendance : SQLite est intégré à Node (`node:sqlite`, Node 24 ou plus).
+L'API (`backend/`) n'a aucune dépendance : SQLite est intégré à Node (`node:sqlite`, Node 24 ou plus).
 
 ## PWA
 
-Le build génère `sw.js` (plugin dans `vite.config.ts`, source dans `sw/sw.js`) : tous les fichiers du build sont mis en cache à l'installation, l'app démarre ensuite sans réseau. Quand une nouvelle version est déployée, un bandeau propose de recharger.
+Le build génère `sw.js` (plugin dans `frontend/vite.config.ts`, source dans `frontend/sw/sw.js`) : tous les fichiers du build sont mis en cache à l'installation, l'app démarre ensuite sans réseau. Quand une nouvelle version est déployée, un bandeau propose de recharger.
 
 Le service worker n'est actif qu'en production (`npm run build` puis `npm run preview`) et exige HTTPS, sauf sur `localhost`. Pour installer l'app sur un téléphone, il faut donc la servir en HTTPS.
 
@@ -37,7 +48,7 @@ Le service worker n'est actif qu'en production (`npm run build` puis `npm run pr
 
 Deux images, toutes deux sans shell ni gestionnaire de paquets, en utilisateur non-root, avec un healthcheck :
 
-- **`ghcr.io/xninety9/ironlog`** : `cgr.dev/chainguard/nginx`. Sert le site et transmet `/api` au conteneur `ironlog-api`. Sonde : petit binaire Go statique (`docker/probe`).
+- **`ghcr.io/xninety9/ironlog`** : `cgr.dev/chainguard/nginx`. Sert le site et transmet `/api` au conteneur `ironlog-api`. Sonde : petit binaire Go statique (`frontend/docker/probe`).
 - **`ghcr.io/xninety9/ironlog-api`** : `cgr.dev/chainguard/node`. Base SQLite dans `/data`, à monter en volume. Sonde : `GET /api/health`.
 
 ```sh
@@ -65,14 +76,14 @@ git tag -a v1.0.1 -m "Ironlog 1.0.1"
 git push origin v1.0.1
 ```
 
-Il faut aussi mettre à jour `package.json` (`npm version X.Y.Z --no-git-tag-version`) et ajouter la section `## [X.Y.Z]` dans `CHANGELOG.md`, sinon la release échoue.
+Il faut aussi mettre à jour le `package.json` racine (`npm version X.Y.Z --no-git-tag-version`) et ajouter la section `## [X.Y.Z]` dans `CHANGELOG.md`, sinon la release échoue.
 
 ## Schéma du corps
 
-`src/lib/body/geo.json` est généré par `outils/trace_corps.py` à partir d'une illustration de référence (vectorisation potrace, puis découpage des zones musculaires). Ne pas l'éditer à la main.
+`frontend/src/lib/body/geo.json` est généré par `outils/trace_corps.py` à partir d'une illustration de référence (vectorisation potrace, puis découpage des zones musculaires). Ne pas l'éditer à la main.
 
 ```sh
-python outils/trace_corps.py src/lib/body/geo.json chemin/vers/reference.png
+python outils/trace_corps.py frontend/src/lib/body/geo.json chemin/vers/reference.png
 ```
 
 Dépendances : `pillow`, `numpy`, `scipy` et la commande `potrace`.

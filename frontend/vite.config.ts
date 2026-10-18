@@ -2,7 +2,11 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { createHash } from 'node:crypto'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig, type Plugin } from 'vite'
+
+// Chemins relatifs à ce fichier : le build marche qu'on le lance depuis frontend/ ou depuis la racine du dépôt.
+const here = (p: string) => fileURLToPath(new URL(p, import.meta.url))
 
 function listFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((f) => {
@@ -27,22 +31,24 @@ function serviceWorker(): Plugin {
         hash.update(f)
         hash.update(item.type === 'chunk' ? item.code : item.source)
       }
-      const pub = listFiles('public').map((p) => relative('public', p).split('\\').join('/'))
+      const pubDir = here('./public')
+      const pub = listFiles(pubDir).map((p) => relative(pubDir, p).split('\\').join('/'))
       for (const f of pub.sort()) {
         hash.update(f)
-        hash.update(readFileSync(join('public', f)))
+        hash.update(readFileSync(join(pubDir, f)))
       }
       const assets = ['./', ...[...built, ...pub].filter((f) => f !== 'index.html').map((f) => './' + f)]
       const source =
         `const VERSION = ${JSON.stringify(hash.digest('hex').slice(0, 12))}\n` +
         `const ASSETS = ${JSON.stringify(assets)}\n\n` +
-        readFileSync('sw/sw.js', 'utf8')
+        readFileSync(here('./sw/sw.js'), 'utf8')
       this.emitFile({ type: 'asset', fileName: 'sw.js', source })
     },
   }
 }
 
-const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as { version: string }
+// La version de l'app est portée par le package.json racine (front, back et tags de release).
+const pkg = JSON.parse(readFileSync(here('../package.json'), 'utf8')) as { version: string }
 
 // https://vite.dev/config/
 export default defineConfig({

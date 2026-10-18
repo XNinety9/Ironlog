@@ -1,0 +1,11 @@
+{
+  "name": "ironlog-backend",
+  "private": true,
+  "description": "API de synchronisation d'Ironlog : SQLite (node:sqlite), aucune dépendance. La version est celle du package.json racine.",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "IRONLOG_DEV_USER=dev DATA_DIR=../.data node --watch index.js",
+    "test": "node --test"
+  }
+}

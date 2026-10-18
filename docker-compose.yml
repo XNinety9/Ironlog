@@ -3,7 +3,9 @@
 # Sans SSO devant, l'API attribue toutes les données à l'utilisateur IRONLOG_DEV_USER.
 services:
   ironlog:
-    build: .
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
     image: ironlog:local
     ports:
       - "8080:8080"
@@ -19,7 +21,7 @@ services:
   ironlog-api:
     build:
       context: .
-      dockerfile: server/Dockerfile
+      dockerfile: backend/Dockerfile
     image: ironlog-api:local
     restart: unless-stopped
     environment:

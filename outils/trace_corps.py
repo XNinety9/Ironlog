@@ -1,5 +1,5 @@
 # Vectorise le schéma de référence en zones musculaires cliquables.
-# Usage : python trace_corps.py src/lib/body/geo.json image_reference.png   (ou maquette/body-geo.js)  (nécessite pillow, numpy, scipy et potrace)
+# Usage : python trace_corps.py frontend/src/lib/body/geo.json image_reference.png   (ou maquette/body-geo.js)  (nécessite pillow, numpy, scipy et potrace)
 import json, re, subprocess, sys, numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from scipy import ndimage as nd
