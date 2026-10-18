@@ -3,7 +3,9 @@
   import { prefs } from './lib/prefs.svelte'
   import { pwa, requestPersistence } from './lib/pwa.svelte'
   import { store } from './lib/store.svelte'
+  import { sync } from './lib/sync.svelte'
   import BackupSection from './views/BackupSection.svelte'
+  import SyncStatus from './views/SyncStatus.svelte'
   import Charges from './views/Charges.svelte'
   import Mensurations from './views/Mensurations.svelte'
 
@@ -18,7 +20,7 @@
   }
 
   onMount(() => {
-    void store.load()
+    void store.load().then(() => sync.start())
     void pwa.register()
     void requestPersistence()
     const onHash = () => (tab = fromHash())
@@ -29,7 +31,10 @@
 
 <div class="app">
   <header class="top">
-    <span class="mark">IRONLOG</span>
+    <div class="brand">
+      <span class="mark">IRONLOG</span>
+      <SyncStatus />
+    </div>
     <div class="seg" role="tablist" aria-label="Sections">
       <button role="tab" id="tab-charges" aria-selected={tab === 'charges'} aria-controls="v-charges" onclick={() => go('charges')}>Charges</button>
       <button role="tab" id="tab-mensurations" aria-selected={tab === 'mensurations'} aria-controls="v-mensurations" onclick={() => go('mensurations')}>Mensurations</button>
@@ -84,6 +89,7 @@
     gap: 18px;
   }
   .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: baseline; gap: 6px 14px; flex-wrap: wrap; }
   .mark { font-family: var(--f-display); font-weight: 800; font-size: 32px; letter-spacing: 0.05em; line-height: 1; }
   .update {
     display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;

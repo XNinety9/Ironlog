@@ -51,6 +51,10 @@ export default defineConfig({
   // Chemins relatifs : l'app fonctionne quel que soit le sous-dossier où elle est hébergée.
   base: './',
   plugins: [svelte(), serviceWorker()],
-  // Accessible depuis le téléphone sur le réseau local pendant le dev.
-  server: { host: true },
+  server: {
+    // Accessible depuis le téléphone sur le réseau local pendant le dev.
+    host: true,
+    // API de synchronisation lancée à part : npm run dev:api
+    proxy: { '/api': 'http://localhost:3000' },
+  },
 })

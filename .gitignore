@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Base SQLite de l'API en développement (npm run dev:api)
+.data/

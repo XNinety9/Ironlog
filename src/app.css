@@ -14,6 +14,7 @@
   --accent: #1f4fd1;
   --accent-ink: #ffffff;
   --good: #17845a;
+  --warn: #a8670a;
   --danger: #c0352b;
   --f-display: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", sans-serif;
   --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -24,7 +25,7 @@
   :root {
     --bg: #0f141a; --surface: #18202a; --ink: #e7ecf2; --muted: #93a0af; --line: #2a3542;
     --body: #1b232d; --muscle: #212a35; --lineart: #a9b5c3; --m-s: #253247; --m-p: #2f4673; --hover: #5577c8;
-    --accent: #6b95ff; --accent-ink: #0b1020; --good: #4cc38a; --danger: #ff7a6e;
+    --accent: #6b95ff; --accent-ink: #0b1020; --good: #4cc38a; --warn: #f0b04a; --danger: #ff7a6e;
     color-scheme: dark;
   }
 }

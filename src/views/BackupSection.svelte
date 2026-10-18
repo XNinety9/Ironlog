@@ -2,6 +2,7 @@
   import { backupFileName, isBackupError, makeBackup, parseBackup, type Backup } from '../lib/backup'
   import { fdate } from '../lib/format'
   import { store } from '../lib/store.svelte'
+  import { sync } from '../lib/sync.svelte'
 
   const KEY = 'ironlog.lastExport'
 
@@ -19,6 +20,9 @@
   let fileInput = $state<HTMLInputElement>()
 
   const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`
+  // Le serveur de synchronisation existe sur ce déploiement (même s'il est momentanément injoignable).
+  const synced = $derived(sync.state !== 'unavailable' && sync.state !== 'starting')
+
   const summary = (ex: number, ms: number) => `${plural(ex, 'exercice', 'exercices')} et ${plural(ms, 'mensuration', 'mensurations')}`
 
   function exportData() {
@@ -67,7 +71,9 @@
   <div class="head">
     <h2 id="backup-title">Sauvegarde</h2>
     <p class="sub">
-      Tes données ne sont que sur cet appareil.
+      {synced
+        ? 'Tes données sont synchronisées entre tes appareils et enregistrées sur le serveur. L’export reste une copie de secours.'
+        : 'Tes données ne sont que sur cet appareil.'}
       {lastExport ? `Dernier export : ${fdate(lastExport)}.` : 'Aucun export pour l’instant.'}
     </p>
   </div>
@@ -77,6 +83,7 @@
       <p id="import-q">
         Remplacer tes données actuelles ({summary(store.exercises.length, store.measures.length)}) par celles du fichier
         ({summary(pending.exercises.length, pending.measures.length)}{pending.exportedAt ? `, exporté le ${fdate(pending.exportedAt.slice(0, 10))}` : ''}) ?
+        {#if synced}Le remplacement s’appliquera aussi à tes autres appareils.{/if}
       </p>
       <div class="btns">
         <button class="btn danger" onclick={confirmImport}>Remplacer mes données</button>

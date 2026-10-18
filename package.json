@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json"
+    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
+    "dev:api": "cd server && IRONLOG_DEV_USER=dev DATA_DIR=../.data node --watch index.js",
+    "test:api": "cd server && node --test"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.0",

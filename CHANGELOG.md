@@ -5,7 +5,15 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Cha
 ## [Unreleased]
 
 ### Ajouté
+- Données enregistrées sur le serveur (API + SQLite dans un volume) : tous tes appareils voient la même chose.
+- Chaque appareil garde une copie locale : l'app reste utilisable sans réseau, les saisies partent au retour du réseau.
+- Indicateur dans l'en-tête : synchronisé, hors ligne, modifications en attente, session expirée.
+- Les données déjà présentes dans le navigateur sont migrées et envoyées au serveur automatiquement.
+- Healthcheck dans les deux images Docker.
 - Le message proposant de charger des exemples peut être masqué ; le choix est mémorisé sur l'appareil.
+
+### Modifié
+- Au chargement, la page vient d'abord du réseau (le cache ne sert que hors ligne ou si le réseau tarde plus de 3 s), pour pouvoir se reconnecter quand la session a expiré.
 
 ## [1.0.1] - 2026-10-17
 

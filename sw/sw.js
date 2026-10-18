@@ -22,13 +22,28 @@ self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting()
 })
 
+const NAVIGATION_TIMEOUT_MS = 3000
+
+async function networkFirst(req) {
+  const cached = () => caches.match('./', { cacheName: CACHE })
+  const timeout = new Promise((resolve) => setTimeout(resolve, NAVIGATION_TIMEOUT_MS))
+  try {
+    const res = await Promise.race([fetch(req), timeout.then(() => null)])
+    if (res) return res
+    return (await cached()) ?? fetch(req)
+  } catch {
+    return (await cached()) ?? Response.error()
+  }
+}
+
 self.addEventListener('fetch', (event) => {
   const req = event.request
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return
 
-  // Navigation : la page d'accueil en cache, pour démarrer même sans réseau.
+  // Navigation : le réseau d'abord, pour que le reverse proxy puisse rediriger vers la connexion quand la
+  // session a expiré ; la page en cache si le réseau est absent ou trop lent (salle de sport en sous-sol).
   if (req.mode === 'navigate') {
-    event.respondWith(caches.match('./', { cacheName: CACHE }).then((r) => r ?? fetch(req)))
+    event.respondWith(networkFirst(req))
     return
   }
 

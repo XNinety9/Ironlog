@@ -22,9 +22,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Node 24 : node:sqlite (API) disponible sans option. L'image de l'API tourne sur une version plus récente.
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Installation
@@ -32,6 +33,9 @@ jobs:
 
       - name: Types
         run: npm run check
+
+      - name: Tests de l'API
+        run: npm run test:api
 
       - name: Build
         run: npm run build
@@ -61,18 +65,24 @@ jobs:
           if-no-files-found: error
 
   docker:
-    name: Image Docker
+    name: Image ${{ matrix.image.name }}
     needs: check
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    strategy:
+      fail-fast: true
+      matrix:
+        image:
+          - { name: ironlog, suffix: '', dockerfile: Dockerfile }
+          - { name: ironlog-api, suffix: '-api', dockerfile: server/Dockerfile }
     steps:
       - uses: actions/checkout@v4
 
       - name: Nom de l'image (GHCR exige des minuscules)
         id: image
-        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}${{ matrix.image.suffix }}" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@v3
 
@@ -99,15 +109,16 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ${{ matrix.image.dockerfile }}
           load: true
-          tags: ironlog:scan
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ${{ matrix.image.name }}:scan
+          cache-from: type=gha,scope=${{ matrix.image.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image.name }}
 
       - name: Scan de sécurité (Trivy)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: ironlog:scan
+          image-ref: ${{ matrix.image.name }}:scan
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: '1'
@@ -117,10 +128,11 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ${{ matrix.image.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
+          cache-from: type=gha,scope=${{ matrix.image.name }}
 
   release:
     name: Release GitHub
@@ -156,10 +168,11 @@ jobs:
             echo "## Installation"
             echo
             echo '```sh'
-            echo "docker pull ${IMAGE,,}:$v"
+            echo "docker pull ${IMAGE,,}:$v       # site (nginx)"
+            echo "docker pull ${IMAGE,,}-api:$v   # API de synchronisation (SQLite dans /data)"
             echo '```'
             echo
-            echo "L'archive \`ironlog-$v.tar.gz\` contient le site statique, à servir en HTTPS."
+            echo "Voir \`docker-compose.yml\` pour lancer les deux. L'archive \`ironlog-$v.tar.gz\` contient le site statique seul."
           } >> notes.md
 
       - name: Publication de la release
