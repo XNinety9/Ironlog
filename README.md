@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/logo.png" alt="Ironlog logo" width="180">
+</p>
+
 # Ironlog
 
 [![CI](https://github.com/XNinety9/Ironlog/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/XNinety9/Ironlog/actions/workflows/ci.yml)
