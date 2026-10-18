@@ -2,7 +2,7 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Chaque section `## [X.Y.Z]` alimente les notes de la release correspondante.
 
-## [Unreleased]
+## [1.1.0] - 2026-10-18
 
 ### Ajouté
 - Données enregistrées sur le serveur (API + SQLite dans un volume) : tous tes appareils voient la même chose.
@@ -14,6 +14,8 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Cha
 
 ### Modifié
 - Au chargement, la page vient d'abord du réseau (le cache ne sert que hors ligne ou si le réseau tarde plus de 3 s), pour pouvoir se reconnecter quand la session a expiré.
+- Dépôt réorganisé en `frontend/` et `backend/`, avec une version unique à la racine.
+- Deux images Docker : `ironlog` (site) et `ironlog-api` (API, base dans `/data`).
 
 ## [1.0.1] - 2026-10-17
 
