@@ -141,7 +141,7 @@
               <div class="name">{x.name}</div>
               <Sparkline values={x.log.map((l) => l.value)} width={64} height={24} />
               <div class="meta">
-                {lv ? `${fmt(lv.value)} cm` : '—'}{#if x.log.length > 1} · {signed(lv!.value - x.log[0].value)} cm{/if}
+                {lv ? `${fmt(lv.value)} cm` : '—'}{#if x.log.length > 1}{' · '}{signed(lv!.value - x.log[0].value)} cm{/if}
               </div>
             </button>
           </li>

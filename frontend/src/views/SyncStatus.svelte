@@ -59,6 +59,7 @@
 <style>
   .sync {
     display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    padding: 4px 10px 4px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); box-shadow: var(--shadow-sm);
     font-family: var(--f-mono); font-size: 11px; color: var(--muted);
   }
   .sync .linkish { font-family: var(--f-body); font-size: 12px; }

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { slide } from 'svelte/transition'
   import DateField from '../lib/DateField.svelte'
   import LineChart from '../lib/LineChart.svelte'
   import Sparkline from '../lib/Sparkline.svelte'
@@ -104,7 +105,7 @@
   </button>
 
   {#if open}
-    <div class="detail">
+    <div class="detail" transition:slide={{ duration: 180 }}>
       {#if chart.length}
         <div class="chart-head">
           <div class="seg small" role="group" aria-label={t('row.ariaValue')}>

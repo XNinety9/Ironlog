@@ -20,6 +20,12 @@ Suis tes charges et tes mensurations sur un schéma du corps cliquable. Installa
   <img src="docs/mobile-fr.png" alt="Ironlog sur téléphone : le schéma du corps et le panneau d'exercice" width="240">
 </p>
 
+<p align="center">
+  <img src="docs/tour-fr.gif" alt="Visite d'Ironlog : charges avec graphe de progression, puis vue d'ensemble des mensurations, puis historique d'une mesure" width="820">
+  <br>
+  <sub>Visite : charges et leur graphe → vue d'ensemble des mensurations → historique d'une mesure.</sub>
+</p>
+
 ## Fonctionnalités
 
 **Charges**

@@ -39,7 +39,7 @@
 <div class="app">
   <header class="top">
     <div class="brand">
-      <span class="mark">IRONLOG</span>
+      <span class="mark"><svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="11" width="5" height="10" rx="1.5"/><rect x="24" y="11" width="5" height="10" rx="1.5"/><rect x="8" y="14.5" width="16" height="3" rx="1"/><rect x="1" y="13" width="2.5" height="6" rx="1"/><rect x="28.5" y="13" width="2.5" height="6" rx="1"/></svg>IRONLOG</span>
       <SyncStatus />
     </div>
     <div class="nav">
@@ -106,7 +106,8 @@
   .nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .seg.small button { padding: 5px 9px; font-size: 12px; }
   .brand { display: flex; align-items: baseline; gap: 6px 14px; flex-wrap: wrap; }
-  .mark { font-family: var(--f-display); font-weight: 800; font-size: 32px; letter-spacing: 0.05em; line-height: 1; }
+  .mark { font-family: var(--f-display); font-weight: 800; font-size: 32px; letter-spacing: 0.05em; line-height: 1; display: inline-flex; align-items: center; gap: 10px; }
+  .logo { width: 0.9em; height: 0.9em; fill: var(--accent); flex: none; }
   .update {
     display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
     padding: 10px 14px; border: 1px solid var(--accent); border-radius: 10px; font-size: 14px;

@@ -20,6 +20,12 @@ Track your lifts and body measurements on a clickable body map. Installable on y
   <img src="docs/mobile-en.png" alt="Ironlog on a phone: the body map and the exercise panel" width="240">
 </p>
 
+<p align="center">
+  <img src="docs/tour-en.gif" alt="Ironlog tour: loads with progress chart, then the measurements overview, then the history of one measurement" width="820">
+  <br>
+  <sub>Tour: loads and their progress chart → measurements overview → history of one measurement.</sub>
+</p>
+
 ## Features
 
 **Loads**

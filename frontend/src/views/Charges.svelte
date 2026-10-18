@@ -128,7 +128,9 @@
     cursor: pointer; font-size: 13px; padding: 5px 11px; border-radius: 999px;
     border: 1px solid var(--line); background: var(--surface); color: var(--ink);
   }
-  .chip .n { font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-left: 6px; }
+  .chip { transition: border-color .15s, background .15s; }
+  .chip:hover { border-color: var(--accent); }
+  .chip .n { font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--bg); }
   .chip[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-  .chip[aria-pressed='true'] .n { color: var(--accent-ink); }
+  .chip[aria-pressed='true'] .n { color: var(--accent-ink); background: rgb(255 255 255 / 0.2); }
 </style>

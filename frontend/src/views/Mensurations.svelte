@@ -346,7 +346,7 @@
   .lbl { cursor: ns-resize; outline: none; touch-action: none; }
   .lbl.draft { cursor: default; }
   svg.dragging, svg.dragging * { cursor: grabbing !important; }
-  .lbl rect { fill: var(--surface); stroke: var(--line); stroke-width: 0.8; }
+  .lbl rect { fill: var(--surface); stroke: var(--line); stroke-width: 0.8; filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.14)); }
   .lbl:focus-visible rect { stroke: var(--accent); stroke-width: 2; }
   .lbl.on rect { stroke: var(--accent); stroke-width: 1.6; }
   .lbl.draft rect { stroke: var(--accent); stroke-dasharray: 3 2; }
