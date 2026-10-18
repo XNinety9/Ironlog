@@ -19,12 +19,6 @@
 Suis tes charges et tes mensurations sur un schéma du corps cliquable. Installable sur ton téléphone, utilisable hors ligne à la salle, et partagée entre tous tes appareils grâce à ton propre serveur.
 
 <p align="center">
-  <img src="docs/desktop-fr.png" alt="Ironlog sur ordinateur : schéma du corps avec les pectoraux sélectionnés, et le graphe de progression d'un exercice" width="820">
-  &nbsp;
-  <img src="docs/mobile-fr.png" alt="Ironlog sur téléphone : le schéma du corps et le panneau d'exercice" width="240">
-</p>
-
-<p align="center">
   <img src="docs/tour-fr.gif" alt="Visite d'Ironlog : charges avec graphe de progression, puis vue d'ensemble des mensurations, puis historique d'une mesure" width="820">
   <br>
   <sub>Visite : charges et leur graphe → vue d'ensemble des mensurations → historique d'une mesure.</sub>

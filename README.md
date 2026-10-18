@@ -19,12 +19,6 @@
 Track your lifts and body measurements on a clickable body map. Installable on your phone, usable offline at the gym, and shared between all your devices through your own server.
 
 <p align="center">
-  <img src="docs/desktop-en.png" alt="Ironlog on desktop: body map with the chest selected, and the progress chart of an exercise" width="820">
-  &nbsp;
-  <img src="docs/mobile-en.png" alt="Ironlog on a phone: the body map and the exercise panel" width="240">
-</p>
-
-<p align="center">
   <img src="docs/tour-en.gif" alt="Ironlog tour: loads with progress chart, then the measurements overview, then the history of one measurement" width="820">
   <br>
   <sub>Tour: loads and their progress chart → measurements overview → history of one measurement.</sub>
