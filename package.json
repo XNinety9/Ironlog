@@ -1,7 +1,7 @@
 {
   "name": "ironlog",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Suivi de charges et de mensurations. Version unique de l'app : front, back et tags de release.",
   "type": "module",
   "workspaces": [

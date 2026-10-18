@@ -3,6 +3,32 @@
 Each version is written in English, then in French. The release notes on GitHub are taken from the section of the version.
 Chaque version est rédigée en anglais, puis en français. Les notes de release GitHub reprennent la section de la version.
 
+## [1.2.0] - 2026-10-18
+
+### English
+
+#### Added
+- New Ironlog logo: in the header, as PWA icons and favicon, and at the top of the README.
+- Animated tour in the README (loads, measurements overview, one measurement's history), in English and French.
+
+#### Changed
+- Visual refresh: soft shadows, hover and press states on buttons and rows, count badges on muscle chips, subtle slide when an exercise opens, slight background glow in light and dark themes.
+
+#### Fixed
+- Missing space between the last value and the change in the measurements list.
+
+### Français
+
+#### Ajouté
+- Nouveau logo Ironlog : dans l'en-tête, en icônes PWA et favicon, et en haut du README.
+- Visite animée dans le README (charges, vue d'ensemble des mensurations, historique d'une mesure), en anglais et en français.
+
+#### Modifié
+- Refonte visuelle : ombres douces, états de survol et d'appui sur les boutons et les lignes, compteurs en pastilles sur les muscles, glissement doux à l'ouverture d'un exercice, léger dégradé de fond en clair comme en sombre.
+
+#### Corrigé
+- Espace manquant entre la dernière valeur et la variation dans la liste des mensurations.
+
 ## [1.1.0] - 2026-10-18
 
 ### English
