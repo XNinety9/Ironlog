@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/logo.png" alt="Logo Ironlog" width="180">
+  <img src="docs/logo.png" alt="Logo Ironlog" width="250">
 </p>
 
 # Ironlog
