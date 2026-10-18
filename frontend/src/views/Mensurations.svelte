@@ -2,6 +2,7 @@
   import BodyShapes from '../lib/body/BodyShapes.svelte'
   import { GEO } from '../lib/body/geo'
   import { fmt, signed, trunc } from '../lib/format'
+  import { t } from '../lib/i18n.svelte'
   import type { Measure } from '../lib/model'
   import { store } from '../lib/store.svelte'
   import MeasurePanel from './MeasurePanel.svelte'
@@ -196,7 +197,7 @@
   }
 
   const placed = $derived.by(() => {
-    const items: Item[] = draft ? [...store.measures, { id: 'draft', name: 'Nouvelle mesure', ...draft, log: [] }] : [...store.measures]
+    const items: Item[] = draft ? [...store.measures, { id: 'draft', name: t('meas.newName'), ...draft, log: [] }] : [...store.measures]
     // Pendant un déplacement, la position en cours remplace celle enregistrée.
     const d = drag
     return place(
@@ -252,7 +253,7 @@
 <div class="view">
   <div class="stage">
     <p class="hint">
-      Touche le corps pour placer une nouvelle mesure. Fais glisser un point pour le déplacer, ou une étiquette pour la monter ou la descendre.
+      {t('meas.hint')}
     </p>
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
     <svg
@@ -261,7 +262,7 @@
       class:dragging={drag?.moved}
       viewBox={L.viewBox}
       role="img"
-      aria-label="Corps vu de face avec les points de mesure"
+      aria-label={t('meas.ariaFigure')}
       {onclick}
       onpointerdown={ondown}
       onpointermove={onmove}
@@ -291,7 +292,7 @@
           data-drag={p.id === 'draft' ? undefined : 'label'}
           role="button"
           tabindex={p.id === 'draft' ? -1 : 0}
-          aria-label="{p.name}{p.last !== undefined ? ` : ${fmt(p.last)} cm` : ''}. Flèches haut et bas pour déplacer l'étiquette."
+          aria-label={t('meas.labelAria', { name: p.name, value: p.last !== undefined ? `${fmt(p.last)} cm` : '—' })}
           onkeydown={(e) => onkey(e, p.id, 'label')}
         >
           <rect x={bxl} y={p.ly} width={L.LW} height={L.LH} rx="6" />
@@ -314,7 +315,7 @@
           r={L.compact ? 14 : 10}
           role="button"
           tabindex={p.id === 'draft' ? -1 : 0}
-          aria-label="Point {p.name}. Flèches pour le déplacer."
+          aria-label={t('meas.pointAria', { name: p.name })}
           onkeydown={(e) => onkey(e, p.id, 'pin')}
         />
       {/each}

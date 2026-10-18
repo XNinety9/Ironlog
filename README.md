@@ -1,97 +1,143 @@
 # Ironlog
 
-Suivi de charges et de mensurations à partir d'un schéma du corps cliquable. Application web installable (PWA), utilisable hors ligne, pensée pour le téléphone à la salle comme pour l'ordi.
+[![CI](https://github.com/XNinety9/Ironlog/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/XNinety9/Ironlog/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/XNinety9/Ironlog?sort=semver&display_name=tag)](https://github.com/XNinety9/Ironlog/releases)
+[![Docker image](https://img.shields.io/badge/image-ghcr.io%2Fxninety9%2Fironlog-2496ED?logo=docker&logoColor=white)](https://github.com/XNinety9/Ironlog/pkgs/container/ironlog)
+![Svelte 5](https://img.shields.io/badge/Svelte-5-FF3E00?logo=svelte&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![Node 24+](https://img.shields.io/badge/Node-%E2%89%A5%2024-339933?logo=nodedotjs&logoColor=white)
+![PWA](https://img.shields.io/badge/PWA-installable%20%26%20offline-5A0FC8)
+![Languages](https://img.shields.io/badge/languages-EN%20%7C%20FR-0A7EA4)
+![Trivy](https://img.shields.io/badge/security-Trivy%20scanned-1904DA?logo=aquasecurity&logoColor=white)
 
-- **Charges** : corps de face et de dos, en mode simple (groupes musculaires) ou détaillé (muscles). Chaque exercice est rattaché à des muscles principaux et secondaires ; chaque saisie (charge × répétitions) est datée.
-- **Mensurations** : des points placés librement sur le corps, chacun avec son historique.
+**English** · [Français](README.fr.md)
 
-Les données sont enregistrées sur le serveur (SQLite, dans un volume hors du conteneur) : tous les appareils qui ouvrent la même instance voient la même chose. Chaque appareil en garde aussi une copie locale (IndexedDB), pour que l'app marche sans réseau ; les saisies faites hors ligne partent au serveur dès qu'il redevient joignable. La section **Sauvegarde**, en bas de page, exporte et réimporte un fichier JSON.
+Track your lifts and body measurements on a clickable body map. Installable on your phone, usable offline at the gym, and shared between all your devices through your own server.
 
-## Données et synchronisation
+<p align="center">
+  <img src="docs/desktop-en.png" alt="Ironlog on desktop: body map with the chest selected, and the progress chart of an exercise" width="820">
+  &nbsp;
+  <img src="docs/mobile-en.png" alt="Ironlog on a phone: the body map and the exercise panel" width="240">
+</p>
 
-- **Enregistrements** : chaque exercice, série, point de mensuration et mesure est un enregistrement indépendant, avec sa date de modification. Deux appareils qui ajoutent chacun une série au même exercice ne se gênent pas.
-- **Conflit** : si le même enregistrement a été modifié des deux côtés, la modification la plus récente l'emporte. Une suppression laisse une trace, pour être propagée.
-- **Échange** : `POST /api/sync` envoie les modifications locales et reçoit tout ce qui a changé depuis le dernier échange (curseur de révision). Il a lieu au démarrage, après chaque modification, au retour du réseau et toutes les minutes.
-- **Identité** : l'API fait confiance à l'en-tête `X-Auth-Request-User` posé par le reverse proxy (Caddy + oauth2-proxy). Elle ne doit donc être joignable qu'à travers lui. Sans SSO (développement, compose local), `IRONLOG_DEV_USER` attribue toutes les données à un utilisateur fixe.
+## Features
 
-## Structure du dépôt
+**Loads**
+- Front and back body map, in *simple* mode (muscle groups) or *detailed* mode (individual muscles).
+- Each exercise is linked to one or more muscles, as **primary** or **secondary**. A bench press can count for the chest as primary and the triceps as secondary.
+- Log the load and reps for each session, dated today or on a past date.
+- Progress chart in load or **estimated 1RM** (Epley formula), with your record. Chart and history are per exercise.
 
+**Measurements**
+- Place points freely on the body (tap the figure), name them, and log their values over time.
+- Drag points and labels to reorganise the layout; labels only move vertically, so nothing goes astray.
+- Chart and history per measurement.
+
+**Data and devices**
+- Your data lives on **your server** (SQLite in a Docker volume). Every device that opens the same instance sees the same data.
+- Each device keeps a local copy, so the app works offline. Changes are sent as soon as the network is back.
+- Export and import a JSON backup at any time.
+
+**Everywhere**
+- Installable as a PWA on phone and desktop.
+- Interface in **English** and **French**, switchable in the header. It follows your browser language by default.
+- Light and dark theme, following your system setting.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph Device["Your devices (PC, phone)"]
+    PWA["Ironlog PWA<br/>local copy (IndexedDB)"]
+  end
+  Proxy["Reverse proxy + SSO<br/>(HTTPS, authentication)"]
+  subgraph Server["Your server (Docker)"]
+    Web["ironlog<br/>nginx, static files"]
+    API["ironlog-api<br/>Node + SQLite"]
+    DB[("/data<br/>ironlog.db")]
+  end
+  PWA -- "HTTPS" --> Proxy
+  Proxy -- "/" --> Web
+  Proxy -- "/api" --> API
+  API --- DB
 ```
-frontend/   PWA Svelte : src/, public/, service worker (sw/), Dockerfile, nginx et sonde (docker/)
-backend/    API de synchronisation Node + SQLite : *.js, tests (test/), Dockerfile
-outils/     script de vectorisation du schéma du corps
-maquette/   première maquette HTML, gardée comme référence
-```
 
-La racine est un workspace npm (`frontend`, `backend`) : `npm install`, `npm run dev`, `npm run build`… s'y lancent directement. Son `package.json` porte **la** version de l'app, commune au front, au back et aux tags de release. Les deux Dockerfiles se construisent depuis la racine (`docker compose build`).
+The API never receives unauthenticated traffic: it trusts the `X-Auth-Request-User` header set by your reverse proxy. Expose it only through that proxy.
 
-## Développement
+## Quick start
+
+### With Docker (recommended)
 
 ```sh
-npm install
-npm run dev:api  # API sur le port 3000, base dans .data/ (à lancer dans un second terminal)
-npm run dev      # http://localhost:5173, aussi accessible depuis le téléphone sur le réseau local
-npm run check    # vérification des types
-npm run test:api # tests de l'API (node:test, aucune dépendance)
-npm run build
+mkdir -p .data
+docker compose up --build        # then open http://localhost:8080
 ```
 
-L'API (`backend/`) n'a aucune dépendance : SQLite est intégré à Node (`node:sqlite`, Node 24 ou plus).
+Locally there is no SSO, so all data is attributed to the `IRONLOG_DEV_USER` user (see `docker-compose.yml`).
 
-## PWA
+### Images
 
-Le build génère `sw.js` (plugin dans `frontend/vite.config.ts`, source dans `frontend/sw/sw.js`) : tous les fichiers du build sont mis en cache à l'installation, l'app démarre ensuite sans réseau. Quand une nouvelle version est déployée, un bandeau propose de recharger.
+Published on every release to GitHub Container Registry:
 
-Le service worker n'est actif qu'en production (`npm run build` puis `npm run preview`) et exige HTTPS, sauf sur `localhost`. Pour installer l'app sur un téléphone, il faut donc la servir en HTTPS.
+| Image | Role | Base |
+| --- | --- | --- |
+| `ghcr.io/xninety9/ironlog` | Web app (static files, nginx) | `cgr.dev/chainguard/nginx`, ~29 MB |
+| `ghcr.io/xninety9/ironlog-api` | Sync API, SQLite database in `/data` | `cgr.dev/chainguard/node` |
 
-## Docker
+Both run as non-root, without a shell, and expose a healthcheck. The images are scanned with Trivy in CI.
 
-Deux images, toutes deux sans shell ni gestionnaire de paquets, en utilisateur non-root, avec un healthcheck :
+### Deployment behind a reverse proxy
 
-- **`ghcr.io/xninety9/ironlog`** : `cgr.dev/chainguard/nginx`. Sert le site et transmet `/api` au conteneur `ironlog-api`. Sonde : petit binaire Go statique (`frontend/docker/probe`).
-- **`ghcr.io/xninety9/ironlog-api`** : `cgr.dev/chainguard/node`. Base SQLite dans `/data`, à monter en volume. Sonde : `GET /api/health`.
+The web app must be served over HTTPS (service worker, PWA installation). Route `/api/*` to `ironlog-api:3000` and everything else to `ironlog:8080`, behind your authentication. Mount a volume on `/data` for the API to keep the database.
+
+## Development
+
+Requirements: Node 24 or later (the API uses the built-in `node:sqlite`).
 
 ```sh
-mkdir -p .data && docker compose up --build   # http://localhost:8080, base dans ./.data
+npm install          # installs the frontend and backend workspaces
+npm run dev:api      # API on :3000, database in .data/
+npm run dev          # app on :5173 (proxies /api to the API)
+npm run check        # type-check the frontend (svelte-check + tsc)
+npm test             # API tests (node:test, no dependencies)
+npm run build        # production build in frontend/dist
 ```
 
-Le dossier de la base doit être accessible en écriture à l'utilisateur du conteneur API (`user:` dans le compose).
+### Project layout
 
-L'image ne gère pas HTTPS : il faut un reverse proxy devant (Caddy, Traefik, Cloudflare…). Sans HTTPS, le service worker ne s'installe pas hors de `localhost`.
+```
+frontend/   Svelte 5 PWA: src/, public/, service worker (sw/), Dockerfile, nginx config and probe (docker/)
+backend/    Sync API (Node, SQLite): app, validation, database, tests, Dockerfile
+outils/     Script that vectorises the body map from a reference illustration
+maquette/   First static HTML mock-up, kept as a reference
+```
 
-## CI/CD
+The root is an npm workspace. Its `package.json` holds **the** app version, shared by the frontend, the backend and the release tag.
 
-Le workflow `.github/workflows/ci.yml` tourne à chaque push et pull request :
+### Translations
 
-1. **check** : types, tests de l'API, build, puis archive du site si c'est un tag.
-2. **docker** : pour chacune des deux images, build, scan Trivy (bloque sur les vulnérabilités critiques ou hautes corrigeables), publication sur GHCR.
-   - `develop` → tag `develop` ; `main` → tag `main` et `latest` ; `v1.2.3` → `1.2.3`, `1.2` et `latest`.
-3. **release** : seulement pour un tag `v*.*.*`. Vérifie que le tag correspond à `package.json`, puis crée la release GitHub avec l'archive, `SHA256SUMS` et la section du `CHANGELOG.md` comme notes.
+Texts live in `frontend/src/lib/i18n/`: `fr.ts` is the reference dictionary, and `en.ts` must contain exactly the same keys (the compiler checks it). Add a key in both files, then use `t('your.key')` in a component.
 
-### Publier une version
+## Releases
+
+CI runs on every push and pull request: type-check, API tests, build, Trivy scan of both images, and publication to GHCR (branch `develop` → tag `develop`, `main` → `main` and `latest`).
+
+To publish a version:
 
 ```sh
-# sur main, après avoir fusionné develop :
-git tag -a v1.0.1 -m "Ironlog 1.0.1"
-git push origin v1.0.1
+# on main, after merging develop
+npm version X.Y.Z --no-git-tag-version       # updates the root package.json
+# add a "## [X.Y.Z]" section to CHANGELOG.md (English, then French)
+git commit -am "Version X.Y.Z" && git push
+git tag -a vX.Y.Z -m "Ironlog X.Y.Z" && git push origin vX.Y.Z
 ```
 
-Il faut aussi mettre à jour le `package.json` racine (`npm version X.Y.Z --no-git-tag-version`) et ajouter la section `## [X.Y.Z]` dans `CHANGELOG.md`, sinon la release échoue.
+The tag workflow checks that the tag matches `package.json`, builds the static archive with SHA-256 checksums, publishes the images, and creates the GitHub release with the changelog section as notes.
 
-## Schéma du corps
+## Privacy
 
-`frontend/src/lib/body/geo.json` est généré par `outils/trace_corps.py` à partir d'une illustration de référence (vectorisation potrace, puis découpage des zones musculaires). Ne pas l'éditer à la main.
+Your data never leaves your server. There are no third-party services, no analytics, and no external requests from the app.
 
-```sh
-python outils/trace_corps.py frontend/src/lib/body/geo.json chemin/vers/reference.png
-```
+## Licence
 
-Dépendances : `pillow`, `numpy`, `scipy` et la commande `potrace`.
-
-> L'illustration de référence actuelle n'est pas libre de droits : elle convient pour un usage personnel. Avant toute diffusion publique, il faudra une licence ou un schéma redessiné.
-
-## Branches
-
-`develop` pour le travail en cours ; `main` sera créée pour la v1.0.0.
-
-`maquette/` contient la première maquette autonome (HTML seul), gardée comme référence.
+No licence has been chosen yet. The body map was vectorised from a third-party illustration whose licence is not confirmed. Until a licence is added, all rights are reserved and the code is not licensed for reuse.

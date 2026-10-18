@@ -1,7 +1,8 @@
 <script lang="ts">
   import BodyShapes from '../lib/body/BodyShapes.svelte'
   import { viewBoxOf } from '../lib/body/geo'
-  import { GROUPS, convertKey, groupOf, keysFor, nameOf, type Mode } from '../lib/body/muscles'
+  import { convertKey, groupName, groupOf, keysFor, nameOf, type Mode } from '../lib/body/muscles'
+  import { t } from '../lib/i18n.svelte'
   import { exercisesFor } from '../lib/model'
   import { store } from '../lib/store.svelte'
   import ExercisePanel from './ExercisePanel.svelte'
@@ -52,13 +53,13 @@
 <div class="view">
   <div class="stage">
     <div class="toolbar">
-      <div class="seg" role="group" aria-label="Niveau de détail">
-        <button aria-pressed={mode === 'simple'} onclick={() => setMode('simple')}>Simple</button>
-        <button aria-pressed={mode === 'detail'} onclick={() => setMode('detail')}>Détaillé</button>
+      <div class="seg" role="group" aria-label={t('charges.detailLevel')}>
+        <button aria-pressed={mode === 'simple'} onclick={() => setMode('simple')}>{t('charges.simple')}</button>
+        <button aria-pressed={mode === 'detail'} onclick={() => setMode('detail')}>{t('charges.detailed')}</button>
       </div>
       <div class="legend">
-        <span><i class="sw p"></i>Travaillé en principal</span>
-        <span><i class="sw s"></i>En secondaire seulement</span>
+        <span><i class="sw p"></i>{t('charges.legendPrimary')}</span>
+        <span><i class="sw s"></i>{t('charges.legendSecondary')}</span>
       </div>
     </div>
 
@@ -71,24 +72,24 @@
       onpointerleave={() => (hov = null)}
     >
       <figure>
-        <svg class="fig" viewBox={viewBoxOf('front')} role="img" aria-label="Corps vu de face">
+        <svg class="fig" viewBox={viewBoxOf('front')} role="img" aria-label={t('charges.ariaFront')}>
           <BodyShapes view="front" {zoneClass} />
         </svg>
-        <figcaption>Face</figcaption>
+        <figcaption>{t('charges.front')}</figcaption>
       </figure>
       <figure>
-        <svg class="fig" viewBox={viewBoxOf('back')} role="img" aria-label="Corps vu de dos">
+        <svg class="fig" viewBox={viewBoxOf('back')} role="img" aria-label={t('charges.ariaBack')}>
           <BodyShapes view="back" {zoneClass} />
         </svg>
-        <figcaption>Dos</figcaption>
+        <figcaption>{t('charges.back')}</figcaption>
       </figure>
     </div>
 
     <div class="readout">
       {#if focus}
-        <b>{nameOf(focus)}</b>{#if mode === 'detail'} · {GROUPS[groupOf(focus)!]}{/if}
+        <b>{nameOf(focus)}</b>{#if mode === 'detail'} · {groupName(groupOf(focus)!)}{/if}
       {:else}
-        Survole ou touche un muscle
+        {t('charges.hover')}
       {/if}
     </div>
 

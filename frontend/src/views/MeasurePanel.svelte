@@ -3,6 +3,7 @@
   import LineChart from '../lib/LineChart.svelte'
   import Sparkline from '../lib/Sparkline.svelte'
   import { fdate, fmt, parseNum, signed } from '../lib/format'
+  import { t } from '../lib/i18n.svelte'
   import { today } from '../lib/model'
   import { store } from '../lib/store.svelte'
 
@@ -59,55 +60,55 @@
 <aside class="panel" aria-live="polite">
   {#if draft}
     <div>
-      <div class="eyebrow">Nouveau point</div>
-      <h2 class="ptitle">Nouvelle mesure</h2>
+      <div class="eyebrow">{t('mp.newPoint')}</div>
+      <h2 class="ptitle">{t('meas.newName')}</h2>
     </div>
-    <p class="sub">Point placé. Touche ailleurs sur le corps pour le déplacer.</p>
+    <p class="sub">{t('mp.placed')}</p>
     <form onsubmit={create} autocomplete="off">
-      <label>Nom de la mesure<input id="m-name" bind:this={nameInput} bind:value={newName} required placeholder="ex. Biceps gauche" /></label>
-      <label>Première mesure (cm)<input id="m-val" bind:value={newVal} inputmode="decimal" placeholder="38,5" /></label>
+      <label>{t('mp.nameLabel')}<input id="m-name" bind:this={nameInput} bind:value={newName} required placeholder={t('mp.namePlaceholder')} /></label>
+      <label>{t('mp.firstLabel')}<input id="m-val" bind:value={newVal} inputmode="decimal" placeholder="38,5" /></label>
       <div class="btns">
-        <button class="btn" type="submit">Créer le point</button>
-        <button class="btn ghost" type="button" onclick={oncancel}>Annuler</button>
+        <button class="btn" type="submit">{t('mp.create')}</button>
+        <button class="btn ghost" type="button" onclick={oncancel}>{t('action.cancel')}</button>
       </div>
     </form>
   {:else if m}
     <div>
-      <div class="eyebrow">Mensuration</div>
+      <div class="eyebrow">{t('mp.eyebrow')}</div>
       <h2 class="ptitle">{m.name}</h2>
     </div>
     <div class="big">
       <span class="val">{last ? fmt(last.value) : '—'}</span><span class="unit">cm</span>
       {#if last && first && m.log.length > 1}
-        <span class="delta">{signed(last.value - first.value)} cm depuis le {fdate(first.date)}</span>
+        <span class="delta">{t('mp.sinceDate', { delta: signed(last.value - first.value), date: fdate(first.date) })}</span>
       {/if}
     </div>
     {#if m.log.length}
       <LineChart
         points={m.log.map((l) => ({ date: l.date, value: l.value }))}
         unit="cm"
-        title="{m.name} : {fmt(last!.value)} cm au dernier relevé"
+        title={t('mp.chartTitle', { name: m.name, v: fmt(last!.value) })}
       />
     {/if}
 
     <form onsubmit={log} autocomplete="off">
-      <h3>Nouvelle entrée</h3>
+      <h3>{t('mp.newEntry')}</h3>
       <div class="row2">
-        <input id="m-entry" bind:value={entry} inputmode="decimal" placeholder="cm" aria-label="Mesure en centimètres" required />
-        <button class="btn" type="submit">Enregistrer</button>
+        <input id="m-entry" bind:value={entry} inputmode="decimal" placeholder="cm" aria-label={t('mp.ariaEntry')} required />
+        <button class="btn" type="submit">{t('action.save')}</button>
       </div>
       <DateField id="m-date" bind:value={date} />
     </form>
 
     {#if m.log.length}
       <div>
-        <h3>Historique</h3>
+        <h3>{t('mp.history')}</h3>
         <ul class="hist spaced">
           {#each m.log.slice(-6).reverse() as l (l.id)}
             <li>
               <span class="meta">{fdate(l.date)}</span>
               <span class="meta val">{fmt(l.value)} cm</span>
-              <button class="x" aria-label="Supprimer l'entrée du {fdate(l.date)}" onclick={() => store.deleteMeasureEntry(m.id, l.id)}>×</button>
+              <button class="x" aria-label={t('entry.delete', { date: fdate(l.date) })} onclick={() => store.deleteMeasureEntry(m.id, l.id)}>×</button>
             </li>
           {/each}
         </ul>
@@ -115,21 +116,21 @@
     {/if}
 
     {#if m.labelY !== undefined}
-      <button class="linkish" onclick={() => store.moveLabel(m.id, undefined)}>Replacer l'étiquette automatiquement</button>
+      <button class="linkish" onclick={() => store.moveLabel(m.id, undefined)}>{t('mp.resetLabel')}</button>
     {/if}
-    <button class="linkish" onclick={() => onselect(null)}>Toutes les mesures</button>
+    <button class="linkish" onclick={() => onselect(null)}>{t('mp.allMeasures')}</button>
     {#if confirmDel}
       <div class="btns">
-        <button class="btn danger" onclick={() => { store.deleteMeasure(m.id); onselect(null) }}>Supprimer {m.name} et son historique</button>
-        <button class="btn ghost" onclick={() => (confirmDel = false)}>Garder</button>
+        <button class="btn danger" onclick={() => { store.deleteMeasure(m.id); onselect(null) }}>{t('action.deleteWithHistory', { name: m.name })}</button>
+        <button class="btn ghost" onclick={() => (confirmDel = false)}>{t('action.keep')}</button>
       </div>
     {:else}
-      <button class="linkish" onclick={() => (confirmDel = true)}>Supprimer ce point</button>
+      <button class="linkish" onclick={() => (confirmDel = true)}>{t('mp.deleteThis')}</button>
     {/if}
   {:else}
     <div>
-      <div class="eyebrow">Mensurations</div>
-      <h2 class="ptitle">Tes mesures</h2>
+      <div class="eyebrow">{t('mp.listEyebrow')}</div>
+      <h2 class="ptitle">{t('mp.listTitle')}</h2>
     </div>
     {#if store.measures.length}
       <ul class="list">
@@ -147,7 +148,7 @@
         {/each}
       </ul>
     {:else}
-      <p class="empty">Aucun point de mesure. Touche le schéma pour placer le premier.</p>
+      <p class="empty">{t('mp.empty')}</p>
     {/if}
   {/if}
 </aside>

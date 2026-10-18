@@ -1,6 +1,7 @@
 <script lang="ts">
   import { backupFileName, isBackupError, makeBackup, parseBackup, type Backup } from '../lib/backup'
   import { fdate } from '../lib/format'
+  import { t } from '../lib/i18n.svelte'
   import { store } from '../lib/store.svelte'
   import { sync } from '../lib/sync.svelte'
 
@@ -23,7 +24,8 @@
   // Le serveur de synchronisation existe sur ce déploiement (même s'il est momentanément injoignable).
   const synced = $derived(sync.state !== 'unavailable' && sync.state !== 'starting')
 
-  const summary = (ex: number, ms: number) => `${plural(ex, 'exercice', 'exercices')} et ${plural(ms, 'mensuration', 'mensurations')}`
+  const summary = (ex: number, ms: number) =>
+    `${plural(ex, t('count.exerciseOne'), t('count.exerciseMany'))} ${t('common.and')} ${plural(ms, t('count.measureOne'), t('count.measureMany'))}`
 
   function exportData() {
     const data = makeBackup($state.snapshot(store.exercises), $state.snapshot(store.measures))
@@ -39,7 +41,7 @@
     } catch {
       // Sans stockage, on ne retient simplement pas la date.
     }
-    message = { kind: 'ok', text: `Sauvegarde téléchargée : ${backupFileName()}.` }
+    message = { kind: 'ok', text: t('backup.downloaded', { file: backupFileName() }) }
   }
 
   async function pick(e: Event) {
@@ -51,7 +53,7 @@
       pending = parseBackup(await file.text())
     } catch (err) {
       pending = null
-      message = { kind: 'err', text: isBackupError(err) ? err.message : 'Impossible de lire ce fichier.' }
+      message = { kind: 'err', text: isBackupError(err) ? err.message : t('backup.readFail') }
     }
   }
 
@@ -59,7 +61,7 @@
     if (!pending) return
     try {
       await store.replaceAll(pending)
-      message = { kind: 'ok', text: `Import terminé : ${summary(pending.exercises.length, pending.measures.length)}.` }
+      message = { kind: 'ok', text: t('backup.importDone', { summary: summary(pending.exercises.length, pending.measures.length) }) }
     } catch (err) {
       message = { kind: 'err', text: (err as Error).message }
     }
@@ -69,31 +71,32 @@
 
 <section class="backup" aria-labelledby="backup-title">
   <div class="head">
-    <h2 id="backup-title">Sauvegarde</h2>
+    <h2 id="backup-title">{t('backup.title')}</h2>
     <p class="sub">
-      {synced
-        ? 'Tes données sont synchronisées entre tes appareils et enregistrées sur le serveur. L’export reste une copie de secours.'
-        : 'Tes données ne sont que sur cet appareil.'}
-      {lastExport ? `Dernier export : ${fdate(lastExport)}.` : 'Aucun export pour l’instant.'}
+      {synced ? t('backup.synced') : t('backup.local')}
+      {lastExport ? t('backup.lastExport', { date: fdate(lastExport) }) : t('backup.noExport')}
     </p>
   </div>
 
   {#if pending}
     <div class="confirm" role="alertdialog" aria-labelledby="import-q">
       <p id="import-q">
-        Remplacer tes données actuelles ({summary(store.exercises.length, store.measures.length)}) par celles du fichier
-        ({summary(pending.exercises.length, pending.measures.length)}{pending.exportedAt ? `, exporté le ${fdate(pending.exportedAt.slice(0, 10))}` : ''}) ?
-        {#if synced}Le remplacement s’appliquera aussi à tes autres appareils.{/if}
+        {t('backup.replaceQ', {
+          current: summary(store.exercises.length, store.measures.length),
+          file: summary(pending.exercises.length, pending.measures.length),
+          exported: pending.exportedAt ? t('backup.exportedOn', { date: fdate(pending.exportedAt.slice(0, 10)) }) : '',
+        })}
+        {#if synced}{t('backup.replaceSynced')}{/if}
       </p>
       <div class="btns">
-        <button class="btn danger" onclick={confirmImport}>Remplacer mes données</button>
-        <button class="btn ghost" onclick={() => (pending = null)}>Annuler</button>
+        <button class="btn danger" onclick={confirmImport}>{t('backup.replaceBtn')}</button>
+        <button class="btn ghost" onclick={() => (pending = null)}>{t('action.cancel')}</button>
       </div>
     </div>
   {:else}
     <div class="btns">
-      <button class="btn ghost" onclick={exportData} disabled={store.isEmpty}>Exporter mes données</button>
-      <button class="btn ghost" onclick={() => fileInput?.click()}>Importer une sauvegarde</button>
+      <button class="btn ghost" onclick={exportData} disabled={store.isEmpty}>{t('backup.export')}</button>
+      <button class="btn ghost" onclick={() => fileInput?.click()}>{t('backup.import')}</button>
       <input bind:this={fileInput} id="import-file" type="file" accept="application/json,.json" hidden onchange={pick} />
     </div>
   {/if}

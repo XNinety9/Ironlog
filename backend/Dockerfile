@@ -1,16 +1,16 @@
 # syntax=docker/dockerfile:1
-# Image de l'API de synchronisation. Contexte de build : la racine du dépôt (pour lire la version).
-# Aucune dépendance npm : SQLite est intégré à Node (node:sqlite).
+# Sync API image. Build context: the repository root (to read the app version).
+# No npm dependencies: SQLite is built into Node (node:sqlite).
 
 FROM cgr.dev/chainguard/node:latest
 WORKDIR /app
 COPY backend/package.json backend/db.js backend/validate.js backend/app.js backend/index.js ./
 COPY package.json /tmp/root-package.json
-# Version de l'app, lue depuis le package.json racine (même numéro que le front et le tag de release).
+# App version, read from the root package.json (same number as the front end and the release tag).
 RUN ["node", "-e", "const v = require('/tmp/root-package.json').version; require('fs').writeFileSync('version.json', JSON.stringify({ version: v }))"]
 
 ENV PORT=3000 DATA_DIR=/data NODE_ENV=production
-# La base SQLite vit dans ce volume, hors du conteneur.
+# The SQLite database lives in this volume, outside the container.
 VOLUME ["/data"]
 USER 65532
 EXPOSE 3000

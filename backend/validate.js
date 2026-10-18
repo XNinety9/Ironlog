@@ -36,26 +36,26 @@ const SHAPES = {
  * @returns {{ cursor: number, changes: SyncRecord[] }}
  */
 export function parseSyncBody(body) {
-  if (!isObj(body)) throw new ValidationError('Corps JSON attendu.')
+  if (!isObj(body)) throw new ValidationError('JSON body expected.')
   const b = /** @type {Record<string, unknown>} */ (body)
   const cursor = b.cursor ?? 0
-  if (!isNum(cursor) || /** @type {number} */ (cursor) < 0) throw new ValidationError('Curseur invalide.')
+  if (!isNum(cursor) || /** @type {number} */ (cursor) < 0) throw new ValidationError('Invalid cursor.')
   const raw = b.changes ?? []
-  if (!Array.isArray(raw)) throw new ValidationError('« changes » doit être une liste.')
-  if (raw.length > LIMITS.changes) throw new ValidationError(`Trop de modifications d'un coup (max ${LIMITS.changes}).`)
+  if (!Array.isArray(raw)) throw new ValidationError('"changes" must be a list.')
+  if (raw.length > LIMITS.changes) throw new ValidationError(`Too many changes at once (max ${LIMITS.changes}).`)
 
   const changes = raw.map((c, i) => {
-    const where = `Modification n° ${i + 1}`
-    if (!isObj(c)) throw new ValidationError(`${where} : objet attendu.`)
-    if (!isStr(c.id, LIMITS.idLength)) throw new ValidationError(`${where} : identifiant invalide.`)
+    const where = `Change #${i + 1}`
+    if (!isObj(c)) throw new ValidationError(`${where}: object expected.`)
+    if (!isStr(c.id, LIMITS.idLength)) throw new ValidationError(`${where}: invalid id.`)
     // hasOwn et pas « in » : « toString » ou « constructor » ne doivent pas passer pour des types.
-    if (typeof c.kind !== 'string' || !Object.hasOwn(SHAPES, c.kind)) throw new ValidationError(`${where} : type inconnu.`)
-    if (!isNum(c.updatedAt) || c.updatedAt <= 0) throw new ValidationError(`${where} : date de modification invalide.`)
+    if (typeof c.kind !== 'string' || !Object.hasOwn(SHAPES, c.kind)) throw new ValidationError(`${where}: unknown type.`)
+    if (!isNum(c.updatedAt) || c.updatedAt <= 0) throw new ValidationError(`${where}: invalid modification date.`)
     const deleted = c.deleted === true
     // Un enregistrement supprimé n'a plus besoin de ses données : on n'en garde que la trace.
     const data = deleted ? {} : c.data
     if (!deleted && !(isObj(data) && SHAPES[/** @type {keyof typeof SHAPES} */ (c.kind)](data))) {
-      throw new ValidationError(`${where} (${c.kind}) : données incomplètes ou invalides.`)
+      throw new ValidationError(`${where} (${c.kind}): incomplete or invalid data.`)
     }
     return /** @type {SyncRecord} */ ({ id: c.id, kind: c.kind, updatedAt: Math.round(c.updatedAt), deleted, data })
   })

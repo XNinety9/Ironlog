@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ChartPoint } from './chart'
   import { fdate, fmt } from './format'
+  import { bcp47 } from './i18n.svelte'
 
   interface Props {
     points: ChartPoint[]
@@ -69,7 +70,7 @@
     while (d.getTime() <= t1) {
       months.push({
         t: d.getTime(),
-        label: d.toLocaleDateString('fr-FR', d.getMonth() === 0 ? { month: 'short', year: '2-digit' } : { month: 'short' }),
+        label: d.toLocaleDateString(bcp47(), d.getMonth() === 0 ? { month: 'short', year: '2-digit' } : { month: 'short' }),
       })
       d.setMonth(d.getMonth() + 1)
     }

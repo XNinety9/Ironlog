@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { GROUPS, ZONES, type GroupId } from './muscles'
+  import { t } from '../i18n.svelte'
+  import { GROUP_IDS, ZONES, groupName, zoneName, type GroupId } from './muscles'
 
   interface Props {
     primary: string[]
@@ -8,7 +9,7 @@
 
   let { primary = $bindable(), secondary = $bindable() }: Props = $props()
 
-  const groups = Object.entries(GROUPS) as [GroupId, string][]
+  const groups: GroupId[] = [...GROUP_IDS]
   const zonesOf = (g: GroupId) => ZONES.filter((z) => z.g === g)
 
   const roleOf = (id: string): 'p' | 's' | null =>
@@ -24,24 +25,27 @@
     } else secondary = secondary.filter((x) => x !== id)
   }
 
-  const label = (r: 'p' | 's' | null) => (r === 'p' ? 'principal' : r === 's' ? 'secondaire' : 'non travaillé')
+  const label = (r: 'p' | 's' | null) => t(r === 'p' ? 'role.primary' : r === 's' ? 'role.secondary' : 'role.none')
 </script>
 
 <div class="picker">
-  <p class="sub">Touche un muscle pour le passer en <b class="kp">principal</b>, puis en <b class="ks">secondaire</b>, puis le retirer.</p>
-  {#each groups as [g, name] (g)}
+  <p class="sub">
+    {t('role.pickerExplainA')} <b class="kp">{t('role.primary')}</b>, {t('role.pickerExplainB')} <b class="ks">{t('role.secondary')}</b>, {t('role.pickerExplainC')}
+  </p>
+  {#each groups as g (g)}
     {@const zs = zonesOf(g)}
+    {@const name = groupName(g)}
     <div class="grp">
       <span class="gname">{name}</span>
       <div class="opts">
         {#if zs.length > 1}
-          <button type="button" class="opt {roleOf(g) ?? ''}" aria-label="{name} (tout le groupe) : {label(roleOf(g))}" onclick={() => cycle(g)}>
-            Tout le groupe
+          <button type="button" class="opt {roleOf(g) ?? ''}" aria-label={t('picker.ariaGroup', { name, label: label(roleOf(g)) })} onclick={() => cycle(g)}>
+            {t('picker.wholeGroup')}
           </button>
         {/if}
         {#each zs as z (z.id)}
-          <button type="button" class="opt {roleOf(z.id) ?? ''}" aria-label="{z.n} : {label(roleOf(z.id))}" onclick={() => cycle(z.id)}>
-            {zs.length > 1 ? z.n : 'Tout le groupe'}
+          <button type="button" class="opt {roleOf(z.id) ?? ''}" aria-label={t('picker.ariaZone', { name: zoneName(z.id), label: label(roleOf(z.id)) })} onclick={() => cycle(z.id)}>
+            {zs.length > 1 ? zoneName(z.id) : t('picker.wholeGroup')}
           </button>
         {/each}
       </div>

@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
-# Image du site. Contexte de build : la racine du dépôt (workspace npm + version de l'app).
+# Web app image. Build context: the repository root (npm workspace + app version).
 
-# Étape 1 : build de l'app. Node n'est pas présent dans l'image finale.
+# Stage 1: build the app. Node is not present in the final image.
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -11,20 +11,20 @@ RUN npm ci --workspace frontend --include-workspace-root
 COPY frontend/ frontend/
 RUN npm run build --workspace frontend
 
-# Étape 2 : sonde de santé, binaire Go statique (l'image finale n'a ni shell ni wget).
+# Stage 2: health probe, a static Go binary (the final image has no shell or wget).
 FROM golang:1.27-alpine AS probe
 WORKDIR /src
 COPY frontend/docker/probe/ .
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /probe .
 
-# Étape 3 : image minimale Chainguard (~28 Mo, sans shell ni gestionnaire de paquets,
-# quelques paquets seulement donc peu de vulnérabilités à remonter). Elle sert les fichiers statiques
-# et transmet /api au conteneur ironlog-api.
+# Stage 3: minimal Chainguard image (~28 MB, no shell or package manager,
+# few packages, so few vulnerabilities to report). It serves the static files
+# and forwards /api to the ironlog-api container.
 FROM cgr.dev/chainguard/nginx:latest AS runtime
 COPY frontend/docker/nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /app/frontend/dist /usr/share/nginx/html
 COPY --from=probe /probe /usr/local/bin/probe
-# Utilisateur non-root de l'image (65532).
+# Non-root user of the image (65532).
 USER 65532
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \

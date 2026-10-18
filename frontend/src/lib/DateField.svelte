@@ -1,5 +1,6 @@
 <script lang="ts">
   import { fdate } from './format'
+  import { t } from './i18n.svelte'
   import { today, type IsoDate } from './model'
 
   interface Props {
@@ -15,14 +16,14 @@
 
 {#if open || !isToday}
   <div class="row">
-    <label for={id}>Date</label>
+    <label for={id}>{t('date.label')}</label>
     <input {id} type="date" bind:value max={today()} required />
     {#if !isToday}
-      <button type="button" class="linkish" onclick={() => { value = today(); open = false }}>Revenir à aujourd'hui</button>
+      <button type="button" class="linkish" onclick={() => { value = today(); open = false }}>{t('date.toToday')}</button>
     {/if}
   </div>
 {:else}
-  <button type="button" class="linkish" onclick={() => (open = true)}>Aujourd'hui, {fdate(value)} · Changer la date</button>
+  <button type="button" class="linkish" onclick={() => (open = true)}>{t('date.today', { date: fdate(value) })}</button>
 {/if}
 
 <style>

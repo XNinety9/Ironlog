@@ -26,24 +26,24 @@ function userOf(req, devUser) {
   const user = (Array.isArray(h) ? h[0] : h)?.trim()
   if (user) return user.slice(0, 200)
   if (devUser) return devUser
-  throw new HttpError(401, 'Non authentifié.')
+  throw new HttpError(401, 'Not authenticated.')
 }
 
 /** @param {import('node:http').IncomingMessage} req */
 async function readJson(req) {
   const type = req.headers['content-type'] ?? ''
-  if (!type.startsWith('application/json')) throw new HttpError(415, 'Content-Type application/json attendu.')
+  if (!type.startsWith('application/json')) throw new HttpError(415, 'Content-Type application/json expected.')
   const chunks = []
   let size = 0
   for await (const chunk of req) {
     size += chunk.length
-    if (size > LIMITS.bodyBytes) throw new HttpError(413, 'Requête trop volumineuse.')
+    if (size > LIMITS.bodyBytes) throw new HttpError(413, 'Request too large.')
     chunks.push(chunk)
   }
   try {
     return JSON.parse(Buffer.concat(chunks).toString('utf8'))
   } catch {
-    throw new HttpError(400, 'JSON illisible.')
+    throw new HttpError(400, 'Unreadable JSON.')
   }
 }
 
@@ -78,16 +78,16 @@ export function createApp({ db, version, devUser, log = console.log }) {
         const user = userOf(req, devUser)
         const { cursor, changes } = parseSyncBody(await readJson(req))
         const result = db.sync(user, cursor, changes)
-        if (result.applied) log(`sync ${user} : ${result.applied} modification(s) enregistrée(s), révision ${result.cursor}`)
+        if (result.applied) log(`sync ${user}: ${result.applied} change(s) saved, revision ${result.cursor}`)
         return send(res, 200, { cursor: result.cursor, changes: result.changes })
       }
-      if (url.pathname.startsWith('/api/')) throw new HttpError(404, 'Route inconnue.')
-      throw new HttpError(404, 'Introuvable.')
+      if (url.pathname.startsWith('/api/')) throw new HttpError(404, 'Unknown route.')
+      throw new HttpError(404, 'Not found.')
     } catch (err) {
       if (err instanceof HttpError) return send(res, err.status, { error: err.message })
       if (err instanceof ValidationError) return send(res, 400, { error: err.message })
-      log(`erreur ${req.method} ${url.pathname} : ${err instanceof Error ? err.stack : err}`)
-      return send(res, 500, { error: 'Erreur interne.' })
+      log(`error ${req.method} ${url.pathname}: ${err instanceof Error ? err.stack : err}`)
+      return send(res, 500, { error: 'Internal error.' })
     }
   })
 }

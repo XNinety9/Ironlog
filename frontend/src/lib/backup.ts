@@ -1,3 +1,4 @@
+import { t } from './i18n.svelte'
 import { today, type Exercise, type Measure } from './model'
 
 export interface Backup {
@@ -27,11 +28,10 @@ function check(cond: boolean, msg: string): asserts cond {
 }
 
 function exercise(v: unknown, i: number): Exercise {
-  const where = `exercice n° ${i + 1}`
-  check(isObj(v), `L'${where} est illisible.`)
-  check(isStr(v.id) && isStr(v.name) && isStrArr(v.primary) && isStrArr(v.secondary) && Array.isArray(v.log), `L'${where} est incomplet.`)
+  check(isObj(v), t('backup.errExerciseBad', { n: i + 1 }))
+  check(isStr(v.id) && isStr(v.name) && isStrArr(v.primary) && isStrArr(v.secondary) && Array.isArray(v.log), t('backup.errExerciseIncomplete', { n: i + 1 }))
   const log = v.log.map((l, j) => {
-    check(isObj(l) && isStr(l.id) && isStr(l.date) && DATE.test(l.date) && isNum(l.kg) && isNum(l.reps), `L'entrée ${j + 1} de « ${v.name} » est invalide.`)
+    check(isObj(l) && isStr(l.id) && isStr(l.date) && DATE.test(l.date) && isNum(l.kg) && isNum(l.reps), t('backup.errEntry', { n: j + 1, name: String(v.name) }))
     return { id: l.id, date: l.date, kg: l.kg, reps: l.reps }
   })
   log.sort((a, b) => a.date.localeCompare(b.date))
@@ -39,11 +39,10 @@ function exercise(v: unknown, i: number): Exercise {
 }
 
 function measure(v: unknown, i: number): Measure {
-  const where = `La mensuration n° ${i + 1}`
-  check(isObj(v), `${where} est illisible.`)
-  check(isStr(v.id) && isStr(v.name) && isNum(v.x) && isNum(v.y) && Array.isArray(v.log), `${where} est incomplète.`)
+  check(isObj(v), t('backup.errMeasureBad', { n: i + 1 }))
+  check(isStr(v.id) && isStr(v.name) && isNum(v.x) && isNum(v.y) && Array.isArray(v.log), t('backup.errMeasureIncomplete', { n: i + 1 }))
   const log = v.log.map((l, j) => {
-    check(isObj(l) && isStr(l.id) && isStr(l.date) && DATE.test(l.date) && isNum(l.value), `L'entrée ${j + 1} de « ${v.name} » est invalide.`)
+    check(isObj(l) && isStr(l.id) && isStr(l.date) && DATE.test(l.date) && isNum(l.value), t('backup.errEntry', { n: j + 1, name: String(v.name) }))
     return { id: l.id, date: l.date, value: l.value }
   })
   log.sort((a, b) => a.date.localeCompare(b.date))
@@ -64,11 +63,11 @@ export function parseBackup(text: string): Backup {
   try {
     data = JSON.parse(text)
   } catch {
-    throw new BackupError("Ce fichier n'est pas une sauvegarde Ironlog (JSON illisible).")
+    throw new BackupError(t('backup.errNotJson'))
   }
-  check(isObj(data) && data.app === 'ironlog', "Ce fichier n'est pas une sauvegarde Ironlog.")
-  check(data.format === 1, 'Cette sauvegarde vient d’une version plus récente d’Ironlog.')
-  check(Array.isArray(data.exercises) && Array.isArray(data.measures), 'La sauvegarde est incomplète.')
+  check(isObj(data) && data.app === 'ironlog', t('backup.errNotIronlog'))
+  check(data.format === 1, t('backup.errNewer'))
+  check(Array.isArray(data.exercises) && Array.isArray(data.measures), t('backup.errIncomplete'))
   return {
     app: 'ironlog',
     format: 1,

@@ -6,6 +6,7 @@
   import MusclePicker from '../lib/body/MusclePicker.svelte'
   import { nameOf } from '../lib/body/muscles'
   import { fdate, fmt, parseNum, signed, weeksBetween } from '../lib/format'
+  import { t } from '../lib/i18n.svelte'
   import { today, type Exercise, type Role } from '../lib/model'
   import { prefs } from '../lib/prefs.svelte'
   import { store } from '../lib/store.svelte'
@@ -30,8 +31,8 @@
       const e1 = round1(epley(l.kg, l.reps))
       const set = `${fmt(l.kg)} kg × ${l.reps}`
       return prefs.metric === 'load'
-        ? { date: l.date, value: l.kg, label: set, sub: `1RM estimé : ${fmt(e1)} kg` }
-        : { date: l.date, value: e1, label: `${fmt(e1)} kg estimé`, sub: set }
+        ? { date: l.date, value: l.kg, label: set, sub: t('row.sub1rm', { v: fmt(e1) }) }
+        : { date: l.date, value: e1, label: t('row.estimated', { v: fmt(e1) }), sub: set }
     }),
   )
   const best = $derived(chart.length ? Math.max(...chart.map((p) => p.value)) : 0)
@@ -61,7 +62,7 @@
     const name = eName.trim()
     if (!name) return
     if (!ePrimary.length) {
-      eError = 'Choisis au moins un muscle principal.'
+      eError = t('panel.errPrimary')
       return
     }
     store.updateExercise(ex.id, { name, primary: ePrimary, secondary: eSecondary })
@@ -88,16 +89,16 @@
 
 <li>
   <button class="row-btn" aria-expanded={open} onclick={ontoggle}>
-    <div class="name">{ex.name}<span class="badge {role}">{role === 'p' ? 'principal' : 'secondaire'}</span></div>
+    <div class="name">{ex.name}<span class="badge {role}">{t(role === 'p' ? 'role.primary' : 'role.secondary')}</span></div>
     <Sparkline values={ex.log.map((l) => l.kg)} />
     <div class="meta">
       {#if last}
         {fmt(last.kg)} kg × {last.reps}
         {#if ex.log.length > 1}
-          · <span class:up={gain > 0}>{signed(gain)} kg</span> en {weeksBetween(first.date, last.date)} sem.
+          · <span class:up={gain > 0}>{signed(gain)} kg</span> {t('row.over', { weeks: weeksBetween(first.date, last.date) })}
         {/if}
       {:else}
-        Aucune charge enregistrée
+        {t('row.noLoad')}
       {/if}
     </div>
   </button>
@@ -106,27 +107,27 @@
     <div class="detail">
       {#if chart.length}
         <div class="chart-head">
-          <div class="seg small" role="group" aria-label="Valeur affichée">
-            <button aria-pressed={prefs.metric === 'load'} onclick={() => (prefs.metric = 'load')}>Charge</button>
-            <button aria-pressed={prefs.metric === 'e1rm'} onclick={() => (prefs.metric = 'e1rm')}>1RM estimé</button>
+          <div class="seg small" role="group" aria-label={t('row.ariaValue')}>
+            <button aria-pressed={prefs.metric === 'load'} onclick={() => (prefs.metric = 'load')}>{t('row.load')}</button>
+            <button aria-pressed={prefs.metric === 'e1rm'} onclick={() => (prefs.metric = 'e1rm')}>{t('row.oneRm')}</button>
           </div>
-          <span class="meta">Record : {fmt(best)} kg</span>
+          <span class="meta">{t('row.record', { v: fmt(best) })}</span>
         </div>
         <LineChart
           points={chart}
           unit="kg"
-          title="{ex.name}, {prefs.metric === 'load' ? 'charge' : '1RM estimé'} : {fmt(chart.at(-1)!.value)} kg au dernier relevé"
+          title={t('row.chartTitle', { name: ex.name, metric: t(prefs.metric === 'load' ? 'row.metricLoad' : 'row.metricOneRm'), v: fmt(chart.at(-1)!.value) })}
         />
         {#if highReps}
-          <p class="sub">Au-delà de {RELIABLE_REPS} répétitions, le 1RM estimé n'est qu'une approximation.</p>
+          <p class="sub">{t('row.repsWarning', { reps: RELIABLE_REPS })}</p>
         {/if}
       {/if}
 
       <form onsubmit={log} autocomplete="off">
         <div class="row3">
-          <label>Charge (kg)<input id="log-kg-{ex.id}" bind:value={kg} inputmode="decimal" required /></label>
-          <label>Répétitions<input id="log-reps-{ex.id}" bind:value={reps} inputmode="numeric" required /></label>
-          <button class="btn" type="submit">Enregistrer</button>
+          <label>{t('panel.load')}<input id="log-kg-{ex.id}" bind:value={kg} inputmode="decimal" required /></label>
+          <label>{t('panel.reps')}<input id="log-reps-{ex.id}" bind:value={reps} inputmode="numeric" required /></label>
+          <button class="btn" type="submit">{t('action.save')}</button>
         </div>
         <DateField id="log-date-{ex.id}" bind:value={date} />
       </form>
@@ -137,7 +138,7 @@
             <li>
               <span class="meta">{fdate(l.date)}</span>
               <span class="meta val">{fmt(l.kg)} kg × {l.reps}</span>
-              <button class="x" aria-label="Supprimer l'entrée du {fdate(l.date)}" onclick={() => store.deleteLoad(ex.id, l.id)}>×</button>
+              <button class="x" aria-label={t('entry.delete', { date: fdate(l.date) })} onclick={() => store.deleteLoad(ex.id, l.id)}>×</button>
             </li>
           {/each}
         </ul>
@@ -145,29 +146,29 @@
 
       {#if editing}
         <form class="edit" onsubmit={saveEdit} autocomplete="off">
-          <h3>Modifier l'exercice</h3>
-          <label>Nom<input id="edit-name-{ex.id}" bind:value={eName} required /></label>
+          <h3>{t('row.editTitle')}</h3>
+          <label>{t('row.nameLabel')}<input id="edit-name-{ex.id}" bind:value={eName} required /></label>
           <MusclePicker bind:primary={ePrimary} bind:secondary={eSecondary} />
           {#if eError}<p class="err" role="alert">{eError}</p>{/if}
           <div class="btns">
-            <button class="btn" type="submit">Enregistrer les modifications</button>
-            <button class="btn ghost" type="button" onclick={() => (editing = false)}>Annuler</button>
+            <button class="btn" type="submit">{t('row.saveChanges')}</button>
+            <button class="btn ghost" type="button" onclick={() => (editing = false)}>{t('action.cancel')}</button>
           </div>
         </form>
       {:else}
         <p class="sub">
-          Principal : {ex.primary.map(nameOf).join(', ')}{#if ex.secondary.length}{' · '}Secondaire : {ex.secondary.map(nameOf).join(', ')}{/if}
+          {t('muscles.primary')} {ex.primary.map(nameOf).join(', ')}{#if ex.secondary.length}{' · '}{t('muscles.secondary')} {ex.secondary.map(nameOf).join(', ')}{/if}
         </p>
 
         {#if confirmDel}
           <div class="btns">
-            <button class="btn danger" onclick={() => store.deleteExercise(ex.id)}>Supprimer {ex.name} et son historique</button>
-            <button class="btn ghost" onclick={() => (confirmDel = false)}>Garder</button>
+            <button class="btn danger" onclick={() => store.deleteExercise(ex.id)}>{t('action.deleteWithHistory', { name: ex.name })}</button>
+            <button class="btn ghost" onclick={() => (confirmDel = false)}>{t('action.keep')}</button>
           </div>
         {:else}
           <div class="btns gap">
-            <button class="linkish" onclick={startEdit}>Modifier le nom et les muscles</button>
-            <button class="linkish danger" onclick={() => (confirmDel = true)}>Supprimer</button>
+            <button class="linkish" onclick={startEdit}>{t('row.editNameMuscles')}</button>
+            <button class="linkish danger" onclick={() => (confirmDel = true)}>{t('action.delete')}</button>
           </div>
         {/if}
       {/if}

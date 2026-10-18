@@ -32,7 +32,7 @@ class Pwa {
         location.reload()
       })
     } catch (err) {
-      console.error('Service worker non enregistré', err)
+      console.error('Service worker not registered', err)
     }
   }
 

@@ -1,7 +1,8 @@
 <script lang="ts">
   import MusclePicker from '../lib/body/MusclePicker.svelte'
-  import { GROUPS, ZONES, groupOf, keysFor, nameOf, type Mode } from '../lib/body/muscles'
+  import { ZONES, groupName, groupOf, keysFor, nameOf, zoneName, type Mode } from '../lib/body/muscles'
   import { parseNum } from '../lib/format'
+  import { t } from '../lib/i18n.svelte'
   import { exercisesFor } from '../lib/model'
   import { store } from '../lib/store.svelte'
   import ExerciseRow from './ExerciseRow.svelte'
@@ -36,7 +37,7 @@
     const n = name.trim()
     if (!n || !sel) return
     if (!primary.length) {
-      error = 'Choisis au moins un muscle principal.'
+      error = t('panel.errPrimary')
       return
     }
     const k = parseNum(kg)
@@ -53,21 +54,21 @@
 <aside class="panel" aria-live="polite">
   {#if !sel}
     <div>
-      <div class="eyebrow">Charges</div>
-      <h2 class="ptitle">Choisis un muscle</h2>
+      <div class="eyebrow">{t('panel.loads')}</div>
+      <h2 class="ptitle">{t('panel.pickMuscle')}</h2>
     </div>
-    <p class="empty">Touche une zone du schéma ou un nom dans la liste. Les zones colorées ont déjà des exercices.</p>
-    <div class="big"><span class="val">{store.exercises.length}</span><span class="unit">exercices suivis</span></div>
+    <p class="empty">{t('panel.emptyHint')}</p>
+    <div class="big"><span class="val">{store.exercises.length}</span><span class="unit">{t('panel.tracked')}</span></div>
     <p class="sub">
-      {covered} {mode === 'simple' ? 'groupes' : 'muscles'} sur {keysFor(mode).length} travaillés en principal.
+      {t('panel.coverage', { covered, total: keysFor(mode).length, unit: t(mode === 'simple' ? 'unit.groups' : 'unit.muscles') })}
     </p>
   {:else}
     <div>
-      <div class="eyebrow">{mode === 'simple' ? 'Groupe musculaire' : GROUPS[groupOf(sel)!]}</div>
+      <div class="eyebrow">{mode === 'simple' ? t('panel.muscleGroup') : groupName(groupOf(sel)!)}</div>
       <h2 class="ptitle">{nameOf(sel)}</h2>
     </div>
     {#if parts.length > 1}
-      <p class="sub">Regroupe : {parts.map((z) => z.n).join(', ')}. Passe en mode détaillé pour les séparer.</p>
+      <p class="sub">{t('panel.regroups', { parts: parts.map((z) => zoneName(z.id)).join(', ') })}</p>
     {/if}
 
     {#if list.length}
@@ -77,26 +78,26 @@
         {/each}
       </ul>
     {:else}
-      <p class="empty">Aucun exercice pour l'instant.</p>
+      <p class="empty">{t('panel.noExercise')}</p>
     {/if}
 
     <form onsubmit={add} autocomplete="off">
-      <h3>Ajouter un exercice</h3>
-      <label>Exercice ou machine<input id="ex-name" bind:value={name} required placeholder="ex. Pec deck" /></label>
+      <h3>{t('panel.addTitle')}</h3>
+      <label>{t('panel.name')}<input id="ex-name" bind:value={name} required placeholder={t('panel.namePlaceholder')} /></label>
       <div class="row2">
-        <label>Charge (kg)<input id="ex-kg" bind:value={kg} inputmode="decimal" placeholder="60" /></label>
-        <label>Répétitions<input id="ex-reps" bind:value={reps} inputmode="numeric" placeholder="8" /></label>
+        <label>{t('panel.load')}<input id="ex-kg" bind:value={kg} inputmode="decimal" placeholder="60" /></label>
+        <label>{t('panel.reps')}<input id="ex-reps" bind:value={reps} inputmode="numeric" placeholder="8" /></label>
       </div>
       {#if picking}
         <MusclePicker bind:primary bind:secondary />
       {:else}
         <p class="sub">
-          Principal : {primary.map(nameOf).join(', ')}{#if secondary.length}{' · '}Secondaire : {secondary.map(nameOf).join(', ')}{/if}.
-          <button class="linkish" type="button" onclick={() => (picking = true)}>Choisir d'autres muscles</button>
+          {t('muscles.primary')} {primary.map(nameOf).join(', ')}{#if secondary.length}{' · '}{t('muscles.secondary')} {secondary.map(nameOf).join(', ')}{/if}.
+          <button class="linkish" type="button" onclick={() => (picking = true)}>{t('panel.pickOthers')}</button>
         </p>
       {/if}
       {#if error}<p class="err" role="alert">{error}</p>{/if}
-      <div class="btns"><button class="btn" type="submit">Ajouter l'exercice</button></div>
+      <div class="btns"><button class="btn" type="submit">{t('panel.add')}</button></div>
     </form>
   {/if}
 </aside>

@@ -1,47 +1,99 @@
 # Changelog
 
-Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Chaque section `## [X.Y.Z]` alimente les notes de la release correspondante.
+Each version is written in English, then in French. The release notes on GitHub are taken from the section of the version.
+Chaque version est rédigée en anglais, puis en français. Les notes de release GitHub reprennent la section de la version.
 
 ## [1.1.0] - 2026-10-18
 
-### Ajouté
+### English
+
+#### Added
+- Data is stored on the server (API + SQLite in a volume): all your devices see the same data.
+- Each device keeps a local copy: the app works offline, and changes are sent when the network returns.
+- Status indicator in the header: synced, offline, changes pending, session expired.
+- Data already in the browser is migrated and sent to the server automatically.
+- Healthcheck in both Docker images.
+- The sample-data prompt can be hidden; the choice is remembered on the device.
+- Full English and French interface, with a FR/EN switch in the header. The language follows the browser by default.
+- English and French README, with screenshots and badges.
+
+#### Changed
+- The page loads from the network first (the cache is used only offline or if the network takes more than 3 s), so you can sign in again when your session has expired.
+- Repository reorganised into `frontend/` and `backend/`, with a single version at the root.
+- Two Docker images: `ironlog` (web app) and `ironlog-api` (API, database in `/data`).
+
+### Français
+
+#### Ajouté
 - Données enregistrées sur le serveur (API + SQLite dans un volume) : tous tes appareils voient la même chose.
-- Chaque appareil garde une copie locale : l'app reste utilisable sans réseau, les saisies partent au retour du réseau.
+- Chaque appareil garde une copie locale : l'app reste utilisable hors ligne, et les saisies partent au retour du réseau.
 - Indicateur dans l'en-tête : synchronisé, hors ligne, modifications en attente, session expirée.
 - Les données déjà présentes dans le navigateur sont migrées et envoyées au serveur automatiquement.
 - Healthcheck dans les deux images Docker.
 - Le message proposant de charger des exemples peut être masqué ; le choix est mémorisé sur l'appareil.
+- Interface complète en anglais et en français, avec un sélecteur FR/EN dans l'en-tête. La langue suit celle du navigateur par défaut.
+- README en anglais et en français, avec captures et badges.
 
-### Modifié
+#### Modifié
 - Au chargement, la page vient d'abord du réseau (le cache ne sert que hors ligne ou si le réseau tarde plus de 3 s), pour pouvoir se reconnecter quand la session a expiré.
 - Dépôt réorganisé en `frontend/` et `backend/`, avec une version unique à la racine.
 - Deux images Docker : `ironlog` (site) et `ironlog-api` (API, base dans `/data`).
 
 ## [1.0.1] - 2026-10-17
 
-### Mensurations
-- Les points se déplacent par glisser-déposer, en restant sur la silhouette.
+### English
+
+#### Added
+- Measurement points can be moved by drag and drop, staying on the silhouette.
+- Labels move vertically only; their position is saved and a link resets them automatically.
+- Keyboard: arrow keys move the focused point or label.
+
+#### Fixed
+- Dragging a label with the mouse no longer selects the page's text.
+
+### Français
+
+#### Ajouté
+- Les points de mensuration se déplacent par glisser-déposer, en restant sur la silhouette.
 - Les étiquettes se déplacent à la verticale ; leur position est mémorisée et un lien les replace automatiquement.
 - Au clavier : les flèches déplacent le point ou l'étiquette qui a le focus.
 
-### Corrigé
+#### Corrigé
 - Déplacer une étiquette à la souris ne sélectionne plus le texte de la page.
 
 ## [1.0.0] - 2026-10-17
 
-Première version utilisable au quotidien.
+### English
 
-### Charges
+#### Loads
+- Front and back body map, in simple (muscle groups) or detailed (muscles) mode.
+- Exercises linked to primary and secondary muscles, editable at any time.
+- Entries with load and reps, dated today or on a past date.
+- Progress chart by load or estimated 1RM (Epley formula), with the record shown.
+
+#### Measurements
+- Points placed freely on the body, each with its history and chart.
+- Entries dated today or on a past date.
+
+#### Data and installation
+- Data kept on the device (IndexedDB), with a warning if storage is unavailable.
+- JSON export and import, with confirmation before anything is replaced.
+- Installable web app (PWA), usable offline.
+- Minimal Docker image, served without root privileges.
+
+### Français
+
+#### Charges
 - Schéma du corps de face et de dos, en mode simple (groupes) ou détaillé (muscles).
 - Exercices rattachés à des muscles principaux et secondaires, modifiables à tout moment.
 - Saisie de la charge et des répétitions, à la date du jour ou à une date passée.
 - Graphe de progression, en charge ou en 1RM estimé (formule d'Epley), avec le record affiché.
 
-### Mensurations
+#### Mensurations
 - Points placés librement sur le corps, avec leur historique et leur graphe.
 - Saisie à la date du jour ou à une date passée.
 
-### Données et installation
+#### Données et installation
 - Données conservées sur l'appareil (IndexedDB), avec un avertissement si le stockage est indisponible.
 - Export et import au format JSON, avec confirmation avant tout remplacement.
 - Application installable (PWA) et utilisable hors ligne.

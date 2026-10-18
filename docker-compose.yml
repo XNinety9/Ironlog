@@ -1,6 +1,6 @@
-# Lancer l'app en local : docker compose up --build, puis http://localhost:8080
-# Le service worker (hors ligne, installation) exige HTTPS, sauf sur localhost.
-# Sans SSO devant, l'API attribue toutes les données à l'utilisateur IRONLOG_DEV_USER.
+# Run locally: docker compose up --build, then open http://localhost:8080
+# The service worker (offline use, installation) requires HTTPS, except on localhost.
+# Without an SSO proxy in front, the API attributes all data to the IRONLOG_DEV_USER user.
 services:
   ironlog:
     build:
@@ -27,7 +27,7 @@ services:
     environment:
       - IRONLOG_DEV_USER=local
     volumes:
-      # Base SQLite hors du conteneur. Le dossier doit être accessible en écriture à l'uid du conteneur.
+      # SQLite database kept outside the container. The folder must be writable by the container user.
       - ./.data:/data
     user: "${UID:-1000}:${GID:-1000}"
     read_only: true

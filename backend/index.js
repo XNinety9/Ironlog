@@ -24,7 +24,7 @@ const db = openDb(join(DATA_DIR, 'ironlog.db'))
 const server = createApp({ db, version, devUser: DEV_USER })
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`ironlog-api ${version} : port ${PORT}, base ${join(DATA_DIR, 'ironlog.db')}${DEV_USER ? `, utilisateur de dev « ${DEV_USER} »` : ''}`)
+  console.log(`ironlog-api ${version}: port ${PORT}, database ${join(DATA_DIR, 'ironlog.db')}${DEV_USER ? `, dev user “${DEV_USER}”` : ''}`)
 })
 
 // Arrêt propre (docker stop) : on termine les requêtes en cours puis on ferme la base.

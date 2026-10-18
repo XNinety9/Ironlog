@@ -1,5 +1,6 @@
 import { SvelteMap } from 'svelte/reactivity'
 import { db } from './db'
+import { t } from './i18n.svelte'
 import { today, uid, type Exercise, type IsoDate, type Measure } from './model'
 import { buildView, nextStamp, toRecords, toWire, type LocalRecord, type SyncRecord } from './records'
 import { sampleData } from './samples'
@@ -40,7 +41,7 @@ class Store {
       for (const r of all) this.#records.set(r.id, r)
       this.status = 'ready'
     } catch (err) {
-      console.error('IndexedDB indisponible', err)
+      console.error('IndexedDB unavailable', err)
       this.status = 'memory'
     }
   }
@@ -55,7 +56,7 @@ class Store {
       const tx = (await db()).transaction('records', 'readwrite')
       await Promise.all([...records.map((r) => tx.store.put(r)), tx.done])
     } catch (err) {
-      console.error('Échec de l’enregistrement', err)
+      console.error('Failed to save', err)
       this.status = 'memory'
     }
   }
@@ -203,7 +204,7 @@ class Store {
     try {
       await (await db()).put('meta', value, key)
     } catch (err) {
-      console.error('Échec de l’enregistrement', err)
+      console.error('Failed to save', err)
     }
   }
 
@@ -233,13 +234,13 @@ class Store {
         for (const op of ops) op.catch(() => {})
         await Promise.all(ops)
       } catch (err) {
-        console.error('Échec de l’import', err)
+        console.error('Import failed', err)
         try {
           tx.abort()
         } catch {
           // Déjà annulée par l'erreur.
         }
-        throw new Error('L’enregistrement des données importées a échoué. Tes données actuelles n’ont pas été modifiées.')
+        throw new Error(t('store.importFailed'))
       }
     }
     for (const r of all) this.#records.set(r.id, r)

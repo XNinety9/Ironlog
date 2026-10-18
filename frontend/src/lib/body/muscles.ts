@@ -1,70 +1,74 @@
+import { t } from '../i18n.svelte'
+import type { Key } from '../i18n/fr'
+
 export type View = 'front' | 'back'
 export type Mode = 'simple' | 'detail'
 
-export const GROUPS = {
-  pectoraux: 'Pectoraux',
-  epaules: 'Épaules',
-  biceps: 'Biceps',
-  triceps: 'Triceps',
-  avantbras: 'Avant-bras',
-  abdos: 'Abdominaux',
-  dos: 'Dos',
-  quadriceps: 'Quadriceps',
-  adducteurs: 'Adducteurs',
-  fessiers: 'Fessiers',
-  ischios: 'Ischio-jambiers',
-  mollets: 'Mollets',
-} as const
+export const GROUP_IDS = [
+  'pectoraux',
+  'epaules',
+  'biceps',
+  'triceps',
+  'avantbras',
+  'abdos',
+  'dos',
+  'quadriceps',
+  'adducteurs',
+  'fessiers',
+  'ischios',
+  'mollets',
+] as const
 
-export type GroupId = keyof typeof GROUPS
+export type GroupId = (typeof GROUP_IDS)[number]
 
 export interface Zone {
   id: string
   g: GroupId
-  n: string
 }
 
-/** Muscles du mode détaillé. Les ids correspondent aux zones de geo.json. */
+/** Muscles du mode détaillé. Les ids correspondent aux zones de geo.json ; les noms sont dans les dictionnaires. */
 export const ZONES: Zone[] = [
-  { id: 'pec-haut', g: 'pectoraux', n: 'Haut des pectoraux' },
-  { id: 'pec-bas', g: 'pectoraux', n: 'Bas des pectoraux' },
-  { id: 'delt-ant', g: 'epaules', n: 'Deltoïde antérieur' },
-  { id: 'delt-lat', g: 'epaules', n: 'Deltoïde latéral' },
-  { id: 'delt-post', g: 'epaules', n: 'Deltoïde postérieur' },
-  { id: 'biceps', g: 'biceps', n: 'Biceps' },
-  { id: 'triceps', g: 'triceps', n: 'Triceps' },
-  { id: 'avantbras', g: 'avantbras', n: 'Avant-bras' },
-  { id: 'grand-droit', g: 'abdos', n: 'Grand droit' },
-  { id: 'obliques', g: 'abdos', n: 'Obliques et dentelés' },
-  { id: 'trapezes', g: 'dos', n: 'Trapèzes' },
-  { id: 'grand-rond', g: 'dos', n: 'Grand rond et infra-épineux' },
-  { id: 'grand-dorsal', g: 'dos', n: 'Grand dorsal' },
-  { id: 'lombaires', g: 'dos', n: 'Lombaires' },
-  { id: 'droit-femoral', g: 'quadriceps', n: 'Droit fémoral' },
-  { id: 'vaste-ext', g: 'quadriceps', n: 'Vaste externe' },
-  { id: 'vaste-int', g: 'quadriceps', n: 'Vaste interne' },
-  { id: 'adducteurs', g: 'adducteurs', n: 'Adducteurs' },
-  { id: 'moyen-fessier', g: 'fessiers', n: 'Moyen fessier' },
-  { id: 'grand-fessier', g: 'fessiers', n: 'Grand fessier' },
-  { id: 'biceps-femoral', g: 'ischios', n: 'Biceps fémoral' },
-  { id: 'semi-tendineux', g: 'ischios', n: 'Semi-tendineux' },
-  { id: 'gastrocnemien', g: 'mollets', n: 'Gastrocnémiens' },
-  { id: 'soleaire', g: 'mollets', n: 'Soléaire' },
-  { id: 'tibial', g: 'mollets', n: 'Jambier antérieur' },
+  { id: 'pec-haut', g: 'pectoraux' },
+  { id: 'pec-bas', g: 'pectoraux' },
+  { id: 'delt-ant', g: 'epaules' },
+  { id: 'delt-lat', g: 'epaules' },
+  { id: 'delt-post', g: 'epaules' },
+  { id: 'biceps', g: 'biceps' },
+  { id: 'triceps', g: 'triceps' },
+  { id: 'avantbras', g: 'avantbras' },
+  { id: 'grand-droit', g: 'abdos' },
+  { id: 'obliques', g: 'abdos' },
+  { id: 'trapezes', g: 'dos' },
+  { id: 'grand-rond', g: 'dos' },
+  { id: 'grand-dorsal', g: 'dos' },
+  { id: 'lombaires', g: 'dos' },
+  { id: 'droit-femoral', g: 'quadriceps' },
+  { id: 'vaste-ext', g: 'quadriceps' },
+  { id: 'vaste-int', g: 'quadriceps' },
+  { id: 'adducteurs', g: 'adducteurs' },
+  { id: 'moyen-fessier', g: 'fessiers' },
+  { id: 'grand-fessier', g: 'fessiers' },
+  { id: 'biceps-femoral', g: 'ischios' },
+  { id: 'semi-tendineux', g: 'ischios' },
+  { id: 'gastrocnemien', g: 'mollets' },
+  { id: 'soleaire', g: 'mollets' },
+  { id: 'tibial', g: 'mollets' },
 ]
 
 export const zoneById = new Map(ZONES.map((z) => [z.id, z]))
 
-const isGroup = (k: string): k is GroupId => k in GROUPS
+const isGroup = (k: string): k is GroupId => (GROUP_IDS as readonly string[]).includes(k)
+
+export const groupName = (g: GroupId): string => t(`group.${g}` as Key)
+export const zoneName = (id: string): string => t(`zone.${id}` as Key)
 
 /** Clés sélectionnables dans un mode : groupes en simple, muscles en détaillé. */
-export const keysFor = (mode: Mode): string[] =>
-  mode === 'simple' ? Object.keys(GROUPS) : ZONES.map((z) => z.id)
+export const keysFor = (mode: Mode): string[] => (mode === 'simple' ? [...GROUP_IDS] : ZONES.map((z) => z.id))
 
-/** Nom lisible d'une clé (groupe ou muscle). */
+/** Nom lisible d'une clé (groupe ou muscle), dans la langue courante. */
 export function nameOf(key: string): string {
-  if (isGroup(key)) return GROUPS[key]
-  return zoneById.get(key)?.n ?? key
+  if (isGroup(key)) return groupName(key)
+  return zoneName(key)
 }
 
 /** Groupe d'une clé : elle-même si c'est un groupe, sinon le groupe du muscle. */

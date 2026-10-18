@@ -1,3 +1,4 @@
+import { t } from './i18n.svelte'
 import { store } from './store.svelte'
 import type { SyncRecord } from './records'
 
@@ -86,10 +87,10 @@ class Sync {
         return
       }
       // API arrêtée ou en redémarrage derrière le proxy : c'est une panne, pas une absence.
-      if (res.status === 502 || res.status === 503 || res.status === 504) throw new Error('Serveur de synchronisation injoignable.')
+      if (res.status === 502 || res.status === 503 || res.status === 504) throw new Error(t('sync.unreachable'))
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string }
-        throw new Error(body.error ?? `Le serveur a répondu ${res.status}.`)
+        throw new Error(body.error ?? t('sync.statusCode', { status: res.status }))
       }
       const body = (await res.json()) as { cursor: number; changes: SyncRecord[] }
       await store.applySync(sent, body.changes)
@@ -105,8 +106,8 @@ class Sync {
       else {
         this.state = 'error'
         // fetch lève une TypeError quand la requête n'aboutit pas (serveur arrêté, DNS…).
-        this.error = err instanceof TypeError ? 'Serveur injoignable.' : err instanceof Error ? err.message : String(err)
-        console.error('Synchronisation impossible', err)
+        this.error = err instanceof TypeError ? t('sync.unreachableShort') : err instanceof Error ? err.message : String(err)
+        console.error('Sync failed', err)
       }
     } finally {
       this.#running = false
