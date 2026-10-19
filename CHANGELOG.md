@@ -3,6 +3,26 @@
 Each version is written in English, then in French. The release notes on GitHub are taken from the section of the version.
 Chaque version est rédigée en anglais, puis en français. Les notes de release GitHub reprennent la section de la version.
 
+## [1.3.0] - 2026-10-19
+
+### English
+
+#### Added
+- Correct an entry: tap a line in the history to change its date and load, reps or measurement.
+- Rename a measurement point.
+- Full history: past the 6 most recent entries, a link shows them all.
+- Goal per exercise (load and minimum reps): progress bar, dashed line on the chart, and a message when a new entry reaches it for the first time.
+- "Screen on" button in the header: keeps the screen awake while Ironlog is displayed. Remembered on each device, shown only when the browser supports it.
+
+### Français
+
+#### Ajouté
+- Corriger une saisie : touche une ligne de l'historique pour changer sa date et sa charge, ses répétitions ou sa mesure.
+- Renommer un point de mensuration.
+- Historique complet : au-delà des 6 entrées les plus récentes, un lien les affiche toutes.
+- Objectif par exercice (charge et répétitions minimum) : barre de progression, ligne pointillée sur le graphe, et message quand une nouvelle saisie l'atteint pour la première fois.
+- Bouton « Écran allumé » dans l'en-tête : empêche la mise en veille quand Ironlog est affiché. Mémorisé sur chaque appareil, affiché seulement si le navigateur le permet.
+
 ## [1.2.0] - 2026-10-18
 
 ### English
