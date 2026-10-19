@@ -3,6 +3,7 @@ export type LoadMetric = 'load' | 'e1rm'
 const KEYS = {
   metric: 'ironlog.loadMetric',
   samplesHidden: 'ironlog.samplesHidden',
+  keepAwake: 'ironlog.keepAwake',
 }
 
 function read(key: string): string | null {
@@ -25,6 +26,7 @@ function write(key: string, value: string): void {
 class Prefs {
   #metric = $state<LoadMetric>(read(KEYS.metric) === 'e1rm' ? 'e1rm' : 'load')
   #samplesHidden = $state(read(KEYS.samplesHidden) === '1')
+  #keepAwake = $state(read(KEYS.keepAwake) === '1')
 
   get metric(): LoadMetric {
     return this.#metric
@@ -43,6 +45,16 @@ class Prefs {
   set samplesHidden(v: boolean) {
     this.#samplesHidden = v
     write(KEYS.samplesHidden, v ? '1' : '0')
+  }
+
+  /** Empêcher l'écran de se mettre en veille quand l'app est affichée. */
+  get keepAwake(): boolean {
+    return this.#keepAwake
+  }
+
+  set keepAwake(v: boolean) {
+    this.#keepAwake = v
+    write(KEYS.keepAwake, v ? '1' : '0')
   }
 }
 

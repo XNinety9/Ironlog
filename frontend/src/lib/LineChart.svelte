@@ -9,9 +9,11 @@
     /** Résumé lu par les lecteurs d'écran. */
     title: string
     height?: number
+    /** Valeur visée, tracée en pointillés. */
+    target?: number
   }
 
-  let { points, unit, title, height = 180 }: Props = $props()
+  let { points, unit, title, height = 180, target }: Props = $props()
 
   let width = $state(0)
   let active = $state<number | null>(null)
@@ -31,6 +33,7 @@
 
   const geom = $derived.by(() => {
     const vals = points.map((p) => p.value)
+    if (target !== undefined) vals.push(target)
     let lo = Math.min(...vals)
     let hi = Math.max(...vals)
     if (hi - lo < 1e-9) {
@@ -77,7 +80,8 @@
     const every = Math.ceil(months.length / Math.max(1, Math.min(4, Math.floor(iw / 70))))
     const xTicks = months.filter((_, i) => i % every === 0).map((m) => ({ x: x(m.t), label: m.label }))
 
-    return { xy, line, area, yTicks: yTicks.map((v) => ({ v, y: y(v) })), xTicks, base, iw }
+    const targetY = target !== undefined ? y(target) : null
+    return { xy, line, area, yTicks: yTicks.map((v) => ({ v, y: y(v) })), xTicks, base, iw, targetY }
   })
 
   const showMarkers = $derived(points.length <= 40)
@@ -137,6 +141,10 @@
         <text class="axis" x={t.x} y={height - 6} text-anchor="middle">{t.label}</text>
       {/each}
 
+      {#if geom.targetY !== null}
+        <line class="target" x1={PAD.left} x2={width - PAD.right} y1={geom.targetY} y2={geom.targetY} />
+        <text class="target-label" x={PAD.left + 4} y={geom.targetY - 4}>{fmt(target!)} {unit}</text>
+      {/if}
       {#if geom.area}<path class="area" d={geom.area} />{/if}
       {#if geom.xy.length > 1}<path class="line" d={geom.line} />{/if}
 
@@ -175,6 +183,8 @@
   .grid { stroke: var(--line); stroke-width: 1; }
   .axis { font-family: var(--f-mono); font-size: 10px; fill: var(--muted); font-variant-numeric: tabular-nums; }
   .area { fill: var(--accent); opacity: 0.1; }
+  .target { stroke: var(--good); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .target-label { font-family: var(--f-mono); font-size: 10px; fill: var(--good); font-variant-numeric: tabular-nums; }
   .line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
   .dot { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
   .dot.on { stroke-width: 2.5; }

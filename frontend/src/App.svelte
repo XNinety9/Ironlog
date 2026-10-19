@@ -9,6 +9,7 @@
   import Charges from './views/Charges.svelte'
   import Mensurations from './views/Mensurations.svelte'
   import { i18n, t, type Locale } from './lib/i18n.svelte'
+  import { keepAwake } from './lib/wakelock.svelte'
 
   type Tab = 'charges' | 'mensurations'
   const fromHash = (): Tab => (location.hash === '#mensurations' ? 'mensurations' : 'charges')
@@ -30,9 +31,13 @@
     void store.load().then(() => sync.start())
     void pwa.register()
     void requestPersistence()
+    const stopAwake = keepAwake.start()
     const onHash = () => (tab = fromHash())
     addEventListener('hashchange', onHash)
-    return () => removeEventListener('hashchange', onHash)
+    return () => {
+      stopAwake()
+      removeEventListener('hashchange', onHash)
+    }
   })
 </script>
 
@@ -47,6 +52,23 @@
         <button role="tab" id="tab-charges" aria-selected={tab === 'charges'} aria-controls="v-charges" onclick={() => go('charges')}>{t('tab.charges')}</button>
         <button role="tab" id="tab-mensurations" aria-selected={tab === 'mensurations'} aria-controls="v-mensurations" onclick={() => go('mensurations')}>{t('tab.measurements')}</button>
       </div>
+      {#if keepAwake.supported}
+        <div class="seg small">
+          <button
+            class="awake"
+            aria-pressed={keepAwake.enabled}
+            aria-label={t('awake.label')}
+            title={t(keepAwake.enabled && !keepAwake.active ? 'awake.refused' : 'awake.hint')}
+            onclick={() => (keepAwake.enabled = !keepAwake.enabled)}
+          >
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+            </svg>
+            <span>{t('awake.label')}</span>
+          </button>
+        </div>
+      {/if}
       <div class="seg small" role="group" aria-label={t('app.language')}>
         {#each locales as l (l)}
           <button aria-pressed={i18n.locale === l} lang={l} onclick={() => i18n.set(l)}>{l.toUpperCase()}</button>
@@ -105,6 +127,10 @@
   .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .seg.small button { padding: 5px 9px; font-size: 12px; }
+  .awake { display: inline-flex; align-items: center; gap: 6px; }
+  .awake svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; flex: none; }
+  .awake[aria-pressed='true'] svg circle { fill: currentColor; }
+  @media (max-width: 480px) { .awake span { display: none; } }
   .brand { display: flex; align-items: baseline; gap: 6px 14px; flex-wrap: wrap; }
   .mark { font-family: var(--f-display); font-weight: 800; font-size: 32px; letter-spacing: 0.05em; line-height: 1; display: inline-flex; align-items: center; gap: 10px; }
   .logo { width: 40px; height: 40px; border-radius: 10px; flex: none; box-shadow: var(--shadow-sm); }

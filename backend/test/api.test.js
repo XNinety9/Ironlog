@@ -118,6 +118,20 @@ describe('API Ironlog (SSO)', () => {
     assert.deepEqual(res.body.changes, [])
   })
 
+  it('accepte un objectif sur un exercice et refuse un objectif invalide', async () => {
+    const withGoal = (id, goal) => {
+      const e = exercise(id, 1000)
+      return { ...e, data: { ...e.data, goal } }
+    }
+    const ok = await sync('julia', { cursor: 0, changes: [withGoal('e1', { kg: 100, reps: 5 })] })
+    assert.equal(ok.status, 200)
+    const res = await sync('julia', { cursor: 0, changes: [] })
+    assert.deepEqual(res.body.changes[0].data.goal, { kg: 100, reps: 5 })
+
+    const bad = await sync('julia', { cursor: 0, changes: [withGoal('e2', { kg: 'beaucoup' })] })
+    assert.equal(bad.status, 400)
+  })
+
   it('rejette les types qui ne sont pas des enregistrements Ironlog', async () => {
     for (const kind of ['toString', 'constructor', 'admin']) {
       const res = await sync('hugo', { cursor: 0, changes: [{ id: 'x', kind, updatedAt: 1, data: {} }] })

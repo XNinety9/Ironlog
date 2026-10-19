@@ -10,6 +10,12 @@ export interface LoadEntry {
   reps: number
 }
 
+/** Objectif d'un exercice : atteint par une entrée d'au moins `kg` sur au moins `reps` répétitions. */
+export interface Goal {
+  kg: number
+  reps: number
+}
+
 export interface Exercise {
   id: string
   name: string
@@ -17,6 +23,7 @@ export interface Exercise {
   primary: string[]
   /** Muscles ou groupes travaillés en secondaire. */
   secondary: string[]
+  goal?: Goal
   /** Entrées triées par date croissante. */
   log: LoadEntry[]
   createdAt: string
@@ -57,6 +64,15 @@ export function insertByDate<T extends { date: IsoDate }>(log: T[], entry: T): v
   let i = log.length
   while (i > 0 && log[i - 1].date > entry.date) i--
   log.splice(i, 0, entry)
+}
+
+export const meetsGoal = (goal: Goal, l: { kg: number; reps: number }): boolean => l.kg >= goal.kg && l.reps >= goal.reps
+
+/** Où en est un objectif : meilleure charge sur assez de répétitions, et première entrée qui l'atteint. */
+export function goalProgress(goal: Goal, log: LoadEntry[]): { best: number; pct: number; reachedOn?: IsoDate } {
+  const best = Math.max(0, ...log.filter((l) => l.reps >= goal.reps).map((l) => l.kg))
+  const pct = goal.kg > 0 ? Math.min(100, Math.round((best / goal.kg) * 100)) : 100
+  return { best, pct, reachedOn: log.find((l) => meetsGoal(goal, l))?.date }
 }
 
 /** Exercices qui concernent une clé sélectionnée, principaux d'abord. */

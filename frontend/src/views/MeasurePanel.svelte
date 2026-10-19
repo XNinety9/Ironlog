@@ -4,7 +4,7 @@
   import Sparkline from '../lib/Sparkline.svelte'
   import { fdate, fmt, parseNum, signed } from '../lib/format'
   import { t } from '../lib/i18n.svelte'
-  import { today } from '../lib/model'
+  import { today, type MeasureEntry } from '../lib/model'
   import { store } from '../lib/store.svelte'
 
   interface Props {
@@ -33,10 +33,50 @@
   })
   $effect(() => {
     void selId
-    confirmDel = false
+    confirmDel = renaming = showAll = false
+    entryId = null
     entry = ''
     date = today()
   })
+
+  const HIST = 6
+  let showAll = $state(false)
+  const shown = $derived(m ? (showAll ? m.log : m.log.slice(-HIST)).toReversed() : [])
+
+  // Correction d'une entrée de l'historique, une à la fois.
+  let entryId = $state<string | null>(null)
+  let xVal = $state('')
+  let xDate = $state(today())
+
+  function startEntry(l: MeasureEntry) {
+    entryId = l.id
+    xVal = String(l.value).replace('.', ',')
+    xDate = l.date
+  }
+
+  function saveEntry(e: SubmitEvent) {
+    e.preventDefault()
+    const v = parseNum(xVal)
+    if (!entryId || Number.isNaN(v) || !xDate || xDate > today()) return
+    store.updateMeasureEntry(entryId, { date: xDate, value: v })
+    entryId = null
+  }
+
+  let renaming = $state(false)
+  let rName = $state('')
+
+  function startRename() {
+    rName = m?.name ?? ''
+    renaming = true
+  }
+
+  function saveRename(e: SubmitEvent) {
+    e.preventDefault()
+    const n = rName.trim()
+    if (!m || !n) return
+    store.renameMeasure(m.id, n)
+    renaming = false
+  }
 
   function create(e: SubmitEvent) {
     e.preventDefault()
@@ -73,10 +113,20 @@
       </div>
     </form>
   {:else if m}
-    <div>
-      <div class="eyebrow">{t('mp.eyebrow')}</div>
-      <h2 class="ptitle">{m.name}</h2>
-    </div>
+    {#if renaming}
+      <form onsubmit={saveRename} autocomplete="off">
+        <label>{t('mp.nameLabel')}<input id="m-rename" bind:value={rName} required /></label>
+        <div class="btns">
+          <button class="btn" type="submit">{t('action.save')}</button>
+          <button class="btn ghost" type="button" onclick={() => (renaming = false)}>{t('action.cancel')}</button>
+        </div>
+      </form>
+    {:else}
+      <div>
+        <div class="eyebrow">{t('mp.eyebrow')}</div>
+        <h2 class="ptitle">{m.name}</h2>
+      </div>
+    {/if}
     <div class="big">
       <span class="val">{last ? fmt(last.value) : '—'}</span><span class="unit">cm</span>
       {#if last && first && m.log.length > 1}
@@ -104,19 +154,44 @@
       <div>
         <h3>{t('mp.history')}</h3>
         <ul class="hist spaced">
-          {#each m.log.slice(-6).reverse() as l (l.id)}
-            <li>
-              <span class="meta">{fdate(l.date)}</span>
-              <span class="meta val">{fmt(l.value)} cm</span>
-              <button class="x" aria-label={t('entry.delete', { date: fdate(l.date) })} onclick={() => store.deleteMeasureEntry(m.id, l.id)}>×</button>
-            </li>
+          {#each shown as l (l.id)}
+            {#if entryId === l.id}
+              <li class="editing">
+                <form onsubmit={saveEntry} autocomplete="off">
+                  <div class="row2">
+                    <label>{t('mp.valueLabel')}<input id="m-entry-val-{l.id}" bind:value={xVal} inputmode="decimal" required /></label>
+                    <label>{t('date.label')}<input id="m-entry-date-{l.id}" type="date" bind:value={xDate} max={today()} required /></label>
+                  </div>
+                  <div class="btns">
+                    <button class="btn" type="submit">{t('action.save')}</button>
+                    <button class="btn ghost" type="button" onclick={() => (entryId = null)}>{t('action.cancel')}</button>
+                  </div>
+                </form>
+              </li>
+            {:else}
+              <li>
+                <button class="entry" aria-label={t('entry.edit', { date: fdate(l.date) })} onclick={() => startEntry(l)}>
+                  <span class="meta">{fdate(l.date)}</span>
+                  <span class="meta val">{fmt(l.value)} cm</span>
+                </button>
+                <button class="x" aria-label={t('entry.delete', { date: fdate(l.date) })} onclick={() => store.deleteMeasureEntry(m.id, l.id)}>×</button>
+              </li>
+            {/if}
           {/each}
         </ul>
+        {#if m.log.length > HIST}
+          <button class="linkish" onclick={() => (showAll = !showAll)}>
+            {showAll ? t('hist.showLess') : t('hist.showAll', { n: m.log.length })}
+          </button>
+        {/if}
       </div>
     {/if}
 
     {#if m.labelY !== undefined}
       <button class="linkish" onclick={() => store.moveLabel(m.id, undefined)}>{t('mp.resetLabel')}</button>
+    {/if}
+    {#if !renaming}
+      <button class="linkish" onclick={startRename}>{t('mp.rename')}</button>
     {/if}
     <button class="linkish" onclick={() => onselect(null)}>{t('mp.allMeasures')}</button>
     {#if confirmDel}

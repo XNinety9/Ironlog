@@ -1,7 +1,7 @@
 import { SvelteMap } from 'svelte/reactivity'
 import { db } from './db'
 import { t } from './i18n.svelte'
-import { today, uid, type Exercise, type IsoDate, type Measure } from './model'
+import { today, uid, type Exercise, type Goal, type IsoDate, type Measure } from './model'
 import { buildView, nextStamp, toRecords, toWire, type LocalRecord, type SyncRecord } from './records'
 import { sampleData } from './samples'
 
@@ -109,6 +109,20 @@ class Store {
     this.#write([this.#upsert(uid(), 'load', { exerciseId: id, date, kg, reps })])
   }
 
+  updateLoad(entryId: string, patch: { date: IsoDate; kg: number; reps: number }): void {
+    const r = this.#live('load', entryId)
+    if (!r) return
+    this.#write([this.#upsert(entryId, 'load', { ...r.data, ...patch })])
+  }
+
+  /** Fixe l'objectif de l'exercice, ou le retire (undefined). */
+  setGoal(id: string, goal: Goal | undefined): void {
+    const r = this.#live('exercise', id)
+    if (!r) return
+    const { goal: _old, ...rest } = r.data
+    this.#write([this.#upsert(id, 'exercise', goal ? { ...rest, goal } : rest)])
+  }
+
   deleteLoad(_exerciseId: string, entryId: string): void {
     const t = this.#tombstone(entryId)
     if (t) this.#write([t])
@@ -151,6 +165,18 @@ class Store {
   logMeasure(id: string, value: number, date: IsoDate = today()): void {
     if (!this.#live('measure', id)) return
     this.#write([this.#upsert(uid(), 'mentry', { measureId: id, date, value })])
+  }
+
+  renameMeasure(id: string, name: string): void {
+    const r = this.#live('measure', id)
+    if (!r) return
+    this.#write([this.#upsert(id, 'measure', { ...r.data, name })])
+  }
+
+  updateMeasureEntry(entryId: string, patch: { date: IsoDate; value: number }): void {
+    const r = this.#live('mentry', entryId)
+    if (!r) return
+    this.#write([this.#upsert(entryId, 'mentry', { ...r.data, ...patch })])
   }
 
   deleteMeasureEntry(_measureId: string, entryId: string): void {

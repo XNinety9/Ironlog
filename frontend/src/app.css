@@ -122,6 +122,15 @@ input {
 .hist { list-style: none; margin: 0; padding: 0; display: grid; }
 .hist li { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; padding: 3px 0; }
 .hist .val { color: var(--ink); }
+/* Une ligne se touche pour être corrigée : date et valeur forment un seul bouton. */
+.hist .entry {
+  grid-column: span 2; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  border: 0; background: none; cursor: pointer; text-align: left; padding: 3px 6px; margin: 0 -6px; border-radius: 6px;
+}
+.hist .entry:hover { background: var(--bg); }
+.hist li.editing { display: block; padding: 8px 10px; margin: 4px 0; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.hist li.editing input { background: var(--surface); }
+.hist li.editing input[type="date"] { width: auto; }
 .x {
   border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 18px; line-height: 1;
   width: 28px; height: 28px; border-radius: 6px;

@@ -1,4 +1,4 @@
-import type { Exercise, IsoDate, Measure } from './model'
+import type { Exercise, Goal, IsoDate, Measure } from './model'
 
 /**
  * Unité de synchronisation. Chaque exercice, série, point de mensuration et mesure est un enregistrement
@@ -10,6 +10,7 @@ export interface ExerciseData {
   name: string
   primary: string[]
   secondary: string[]
+  goal?: Goal
   createdAt: string
 }
 export interface LoadData {
@@ -66,7 +67,14 @@ export function buildView(records: Iterable<LocalRecord>): { exercises: Exercise
     if (r.deleted) continue
     switch (r.kind) {
       case 'exercise':
-        exercises.set(r.id, { id: r.id, ...r.data, primary: [...r.data.primary], secondary: [...r.data.secondary], log: [] })
+        exercises.set(r.id, {
+          id: r.id,
+          ...r.data,
+          primary: [...r.data.primary],
+          secondary: [...r.data.secondary],
+          ...(r.data.goal ? { goal: { ...r.data.goal } } : {}),
+          log: [],
+        })
         break
       case 'measure':
         measures.set(r.id, { id: r.id, ...r.data, log: [] })
@@ -101,7 +109,13 @@ export function toRecords(exercises: Exercise[], measures: Measure[], stamp = Da
     out.push({ id, kind, updatedAt: stamp, deleted: false, data, dirty: true } as LocalRecord)
 
   for (const e of exercises) {
-    rec(e.id, 'exercise', { name: e.name, primary: [...e.primary], secondary: [...e.secondary], createdAt: e.createdAt })
+    rec(e.id, 'exercise', {
+      name: e.name,
+      primary: [...e.primary],
+      secondary: [...e.secondary],
+      ...(e.goal ? { goal: { kg: e.goal.kg, reps: e.goal.reps } } : {}),
+      createdAt: e.createdAt,
+    })
     for (const l of e.log) rec(l.id, 'load', { exerciseId: e.id, date: l.date, kg: l.kg, reps: l.reps })
   }
   for (const m of measures) {

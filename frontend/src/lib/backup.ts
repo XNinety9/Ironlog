@@ -35,7 +35,18 @@ function exercise(v: unknown, i: number): Exercise {
     return { id: l.id, date: l.date, kg: l.kg, reps: l.reps }
   })
   log.sort((a, b) => a.date.localeCompare(b.date))
-  return { id: v.id, name: v.name, primary: v.primary, secondary: v.secondary, log, createdAt: isStr(v.createdAt) ? v.createdAt : new Date().toISOString() }
+  // Un objectif illisible est ignoré plutôt que de faire échouer tout l'import.
+  const g = v.goal
+  const goal = isObj(g) && isNum(g.kg) && isNum(g.reps) ? { goal: { kg: g.kg, reps: g.reps } } : {}
+  return {
+    id: v.id,
+    name: v.name,
+    primary: v.primary,
+    secondary: v.secondary,
+    ...goal,
+    log,
+    createdAt: isStr(v.createdAt) ? v.createdAt : new Date().toISOString(),
+  }
 }
 
 function measure(v: unknown, i: number): Measure {

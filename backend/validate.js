@@ -21,7 +21,12 @@ const isObj = (/** @type {unknown} */ v) => typeof v === 'object' && v !== null 
 
 /** Champs attendus pour chaque type d'enregistrement : on refuse ce qui ne ressemble pas à des données Ironlog. */
 const SHAPES = {
-  exercise: (/** @type {any} */ d) => isStr(d.name) && isStrList(d.primary) && isStrList(d.secondary) && isStr(d.createdAt),
+  exercise: (/** @type {any} */ d) =>
+    isStr(d.name) &&
+    isStrList(d.primary) &&
+    isStrList(d.secondary) &&
+    (d.goal === undefined || (isObj(d.goal) && isNum(d.goal.kg) && isNum(d.goal.reps))) &&
+    isStr(d.createdAt),
   load: (/** @type {any} */ d) =>
     isStr(d.exerciseId, LIMITS.idLength) && typeof d.date === 'string' && DATE.test(d.date) && isNum(d.kg) && isNum(d.reps),
   measure: (/** @type {any} */ d) =>
